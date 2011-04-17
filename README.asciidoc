@@ -1,0 +1,7 @@
+= AVR32 Toolchain Builder =
+James Snyder <jbsnyder@fanplastic.org>
+v1.0, Sat Apr 16 20:40:49 CDT 2011
+
+This is a first upload of a makefile for an AVR32 toolchain builder for Mac OS
+X & Linux. Currently more work is required before this is generally useful, at
+which time a fuller README will be fleshed out there.
