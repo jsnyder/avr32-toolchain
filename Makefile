@@ -44,6 +44,9 @@ BINUTILS_URL = http://mirror.anl.gov/pub/gnu/binutils/$(BINUTILS_ARCHIVE)
 NEWLIB_ARCHIVE = newlib-$(NEWLIB_VERSION).tar.gz
 NEWLIB_URL = ftp://sources.redhat.com/pub/newlib/$(NEWLIB_ARCHIVE)
 
+AVR32PATCHES_ARCHIVE = avr32-gnu-toolchain-3.2.0.233-source.zip
+AVR32PATCHES_URL = http://distribute.atmel.no/tools/opensource/as5-beta/$(AVR32PATCHES_ARCHIVE)
+
 # MD5(binutils-2.20.1.tar.bz2)= 9cdfb9d6ec0578c166d3beae5e15c4e5
 # MD5(gcc-4.4.3.tar.bz2)= fe1ca818fc6d2caeffc9051fe67ff103
 # MD5(gdb-6.7.1.tar.bz2)= 30a6bf36eded4ae5a152d7d71b86dc14
@@ -62,20 +65,23 @@ ifneq ($(USER),root)
 endif
 
 .PHONY: download-gcc
-download-gdb downloads/$(GCC_ARCHIVE):
+download-gdb downloads/$(GCC_ARCHIVE) download-gcc:
 	cd downloads && curl -LO $(GCC_URL)
 
 .PHONY: download-gdb
-downloads/$(GDB_ARCHIVE):
+downloads/$(GDB_ARCHIVE) download-gdb:
 	cd downloads && curl -LO $(GDB_URL)
 
 .PHONY: download-newlib
-downloads/$(NEWLIB_ARCHIVE):
+downloads/$(NEWLIB_ARCHIVE) download-newlib:
 	cd downloads && curl -LO $(NEWLIB_URL)
 
 .PHONY: download-binutils
-downloads/$(BINUTILS_ARCHIVE):
+downloads/$(BINUTILS_ARCHIVE) download-binutils:
 	cd downloads && curl -LO $(BINUTILS_URL)
+
+
+
 
 .PHONY: download
 download: $(LOCAL_SOURCE)
@@ -99,8 +105,21 @@ else
 	tar -jxf $<
 endif
 
+############# AVR32 PATCHES ############
 
-################ NEWLIB ################
+.PHONY: download-avr32patches
+downloads/$(AVR32PATCHES_ARCHIVE) download-avr32patches:
+	cd downloads && curl -LO $(AVR32PATCHES_URL)
+
+.PHONY: extract-avr32patches
+extract-avr32patches stamps/extract-avr32patches : downloads/$(AVR32PATCHES_ARCHIVE)
+	unzip -o $<
+	[ -d stamps ] || mkdir stamps
+	touch stamps/extract-avr32patches \;
+
+
+############# AVR32 HEADERS ############
+
 
 .PHONY: install-headers
 install-headers stamps/install-headers:
@@ -124,7 +143,7 @@ extract-newlib stamps/extract-newlib : downloads/newlib-$(NEWLIB_VERSION).tar.gz
 
 
 .PHONY: patch-newlib
-patch-newlib stamps/patch-newlib: stamps/extract-newlib
+patch-newlib stamps/patch-newlib: stamps/extract-newlib stamps/extract-avr32patches
 	pushd newlib-$(NEWLIB_VERSION) ; \
 	for f in ../source/avr32/newlib/*.patch; do \
 	patch -N -p0 <$${f} ; \
@@ -183,7 +202,7 @@ extract-binutils stamps/extract-binutils: downloads/binutils-$(BINUTILS_VERSION)
 	touch stamps/extract-binutils;
 
 .PHONY: patch-binutils
-patch-binutils stamps/patch-binutils: stamps/extract-binutils
+patch-binutils stamps/patch-binutils: stamps/extract-binutils stamps/extract-avr32patches
 	pushd binutils-$(BINUTILS_VERSION) ; \
 	for f in ../source/avr32/binutils/*.patch; do \
 	patch -N -p0 <$${f} ; \
@@ -240,7 +259,7 @@ extract-gcc stamps/extract-gcc: downloads/gcc-$(GCC_VERSION).tar.bz2
 	touch stamps/extract-gcc;
 
 .PHONY: patch-gcc
-patch-gcc stamps/patch-gcc: stamps/extract-gcc
+patch-gcc stamps/patch-gcc: stamps/extract-gcc stamps/extract-avr32patches
 	pushd gcc-$(GCC_VERSION) ; \
 	for f in ../source/avr32/gcc/*.patch; do \
 	patch -N -p0 <$${f} ; \
