@@ -66,18 +66,22 @@ endif
 
 .PHONY: download-gcc
 download-gdb downloads/$(GCC_ARCHIVE) download-gcc:
+	[ -d downloads ] || mkdir downloads ;
 	cd downloads && curl -LO $(GCC_URL)
 
 .PHONY: download-gdb
 downloads/$(GDB_ARCHIVE) download-gdb:
+	[ -d downloads ] || mkdir downloads ;
 	cd downloads && curl -LO $(GDB_URL)
 
 .PHONY: download-newlib
 downloads/$(NEWLIB_ARCHIVE) download-newlib:
+	[ -d downloads ] || mkdir downloads ;
 	cd downloads && curl -LO $(NEWLIB_URL)
 
 .PHONY: download-binutils
 downloads/$(BINUTILS_ARCHIVE) download-binutils:
+	[ -d downloads ] || mkdir downloads ;
 	cd downloads && curl -LO $(BINUTILS_URL)
 
 
