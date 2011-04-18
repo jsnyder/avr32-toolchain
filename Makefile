@@ -120,9 +120,8 @@ extract-avr32patches stamps/extract-avr32patches : downloads/$(AVR32PATCHES_ARCH
 
 ############# AVR32 HEADERS ############
 
-
 .PHONY: install-headers
-install-headers stamps/install-headers:
+install-headers stamps/install-headers: stamps/install-gcc
 	mkdir -p  $(PREFIX)/$(TARGET)/include/avr32 && \
 	cp -f avr32-headers/* $(PREFIX)/$(TARGET)/include/avr32/
 
