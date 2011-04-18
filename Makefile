@@ -172,10 +172,12 @@ build-newlib stamps/build-newlib: stamps/prep-newlib stamps/install-binutils sta
 	pushd ../../newlib-$(NEWLIB_VERSION) ; \
 	make clean ; \
 	popd ; \
-	../../newlib-$(NEWLIB_VERSION)/configure --prefix=$(PREFIX) --target=$(TARGET) \
-	--disable-newlib-supplied-syscalls --disable-libgloss --disable-nls \
-	--disable-shared --enable-newlib-io-long-long --enable-newlib-io-long-double \
-	--enable-target-optspace --enable-newlib-io-pos-args --enable-newlib-reent-small && \
+	../../newlib-$(NEWLIB_VERSION)/configure --prefix=$(PREFIX)	\
+	--target=$(TARGET) --disable-newlib-supplied-syscalls		\
+	--disable-libgloss --disable-nls --disable-shared		\
+	--enable-newlib-io-long-long --enable-newlib-io-long-double	\
+	--enable-target-optspace --enable-newlib-io-pos-args		\
+	--enable-newlib-reent-small && \
 	$(MAKE) -j$(PROCS) CFLAGS_FOR_TARGET=$(NEWLIB_FLAGS) CCASFLAGS=$(NEWLIB_FLAGS) && \
 	[ -d stamps ] || mkdir stamps
 	touch stamps/build-newlib;
@@ -229,8 +231,10 @@ build-binutils stamps/build-binutils: stamps/prep-binutils
 	pushd binutils-$(BINUTILS_VERSION) ; \
 	make clean ; \
 	popd ; \
-	../../binutils-$(BINUTILS_VERSION)/configure --prefix=$(PREFIX) --target=$(TARGET) \
-	--disable-nls --disable-shared --disable-werror --disable-threads && \
+	../../binutils-$(BINUTILS_VERSION)/configure			\
+	--prefix=$(PREFIX) --target=$(TARGET) --disable-nls		\
+	--disable-shared --disable-werror				\
+	--with-sysroot=$(PREFIX)/$(TARGET) --with-bugurl=$(BUG_URL) &&	\
 	$(MAKE) maybe-configure-bfd; \
 	$(MAKE) -C bfd headers; \
 	$(MAKE) -j$(PROCS)
@@ -274,13 +278,21 @@ build-gcc stamps/build-gcc: stamps/install-binutils stamps/prep-newlib stamps/pr
 	pushd ../../gcc-$(GCC_VERSION) ; \
 	make clean ; \
 	popd ; \
-	../../gcc-$(GCC_VERSION)/configure --prefix=$(PREFIX) --target=$(TARGET) \
-	--enable-languages="c" --with-gnu-ld --with-gnu-as --with-newlib --disable-nls \
-	--disable-libssp --with-newlib --with-headers=../../newlib-$(NEWLIB_VERSION)/newlib/libc/include \
-	--with-dwarf2 --enable-sjlj-exceptions --enable-version-specific-runtime-libs \
-	--disable-libstdcxx-pch --disable-shared --with-build-time-tools=$(PREFIX)/$(TARGET)/bin \
-	--enable-cxx-flags=$(CFLAGS_FOR_TARGET) \
-	CFLAGS_FOR_TARGET=$(CFLAGS_FOR_TARGET) && \
+	../../gcc-$(GCC_VERSION)/configure --prefix=$(PREFIX)		\
+	--target=$(TARGET) --enable-languages="c" --with-gnu-ld		\
+	--with-gnu-as --with-newlib --disable-nls --disable-libssp	\
+	--with-newlib --with-dwarf2 --enable-sjlj-exceptions		\
+	--enable-version-specific-runtime-libs --disable-libstdcxx-pch	\
+	--disable-shared						\
+	--with-build-time-tools=$(PREFIX)/$(TARGET)/bin			\
+	--enable-cxx-flags=$(CFLAGS_FOR_TARGET)				\
+	--with-sysroot=$(PREFIX)/$(TARGET)				\
+	--with-build-sysroot=$(PREFIX)/$(TARGET)			\
+	--with-build-time-tools=$(PREFIX)/$(TARGET)/bin			\
+	CFLAGS_FOR_TARGET=$(CFLAGS_FOR_TARGET)				\
+	LDFLAGS_FOR_TARGET="--sysroot=$(PREFIX)/$(TARGET)"		\
+	CPPFLAGS_FOR_TARGET="--sysroot=$(PREFIX)/$(TARGET)"		\
+	--with-bugurl=$(BUG_URL) && \
 	$(MAKE) -j$(PROCS)
 	[ -d stamps ] || mkdir stamps
 	touch stamps/build-gcc \;
