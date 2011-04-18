@@ -33,10 +33,15 @@ these from link:https://github.com/mxcl/homebrew[homebrew] for now.
 I'll add these to the Makefile once I have a consistent configuration
 that can be used for both Linux & OS X.
 
+With homebrew you can install those dependencies like this:
+----
+brew install mpfr gmp libmpc
+----
+
 Additionally, you may find that you need more recent versions of
-autoconf and automake for this build progress to run correctly, I'm
-currently investigating options on this and will update instructions
-and the Makefile when a fairly streamlined solution is found.
+autoconf and automake for this build to run correctly, I'm currently
+investigating options on this and will update instructions and the
+Makefile when a fairly streamlined solution is found.
 
 
 === Requirements (Ubuntu) ===
@@ -49,13 +54,6 @@ sudo apt-get install curl flex bison libgmp3-dev libmpfr-dev autoconf build-esse
 ----
 
 === Main Build Instructions ===
-
-Next prep for building the main toolchain:
-
-----
-mkdir -p $HOME/avr32-tools/bin
-export PATH=$HOME/avr32-tools/bin:$PATH
-----
 
 Next build the toolchain:
 

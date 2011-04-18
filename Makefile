@@ -25,6 +25,7 @@ SHELL = /bin/bash
 TARGET=avr32
 PREFIX=$(HOME)/avr32-tools/
 PROCS=5
+PATH := ${PREFIX}/bin:${PATH}
 
 GCC_VERSION = 4.4.3
 MPC_VERSION = 0.8.1
@@ -65,7 +66,7 @@ ifneq ($(USER),root)
 endif
 
 .PHONY: download-gcc
-download-gdb downloads/$(GCC_ARCHIVE) download-gcc:
+downloads/$(GCC_ARCHIVE) download-gcc:
 	[ -d downloads ] || mkdir downloads ;
 	cd downloads && curl -LO $(GCC_URL)
 
@@ -119,7 +120,7 @@ downloads/$(AVR32PATCHES_ARCHIVE) download-avr32patches:
 extract-avr32patches stamps/extract-avr32patches : downloads/$(AVR32PATCHES_ARCHIVE)
 	unzip -o $<
 	[ -d stamps ] || mkdir stamps
-	touch stamps/extract-avr32patches \;
+	touch stamps/extract-avr32patches;
 
 
 ############# AVR32 HEADERS ############
@@ -135,14 +136,14 @@ install-headers stamps/install-headers: stamps/install-gcc
 .PHONY: prep-newlib
 prep-newlib stamps/prep-newlib: stamps/regen-newlib
 	[ -d stamps ] || mkdir stamps
-	touch stamps/prep-newlib \;
+	touch stamps/prep-newlib;
 
 
 .PHONY: extract-newlib
 extract-newlib stamps/extract-newlib : downloads/newlib-$(NEWLIB_VERSION).tar.gz
 	tar -xf $<
 	[ -d stamps ] || mkdir stamps
-	touch stamps/extract-newlib \;
+	touch stamps/extract-newlib;
 
 
 .PHONY: patch-newlib
@@ -153,7 +154,7 @@ patch-newlib stamps/patch-newlib: stamps/extract-newlib stamps/extract-avr32patc
 	done ; \
 	popd ;
 	[ -d stamps ] || mkdir stamps
-	touch stamps/patch-newlib \;
+	touch stamps/patch-newlib;
 
 .PHONY: regen-newlib
 regen-newlib stamps/regen-newlib: stamps/patch-newlib
@@ -167,7 +168,7 @@ regen-newlib stamps/regen-newlib: stamps/patch-newlib
 	done; \
 	popd;
 	[ -d stamps ] || mkdir stamps
-	touch stamps/regen-newlib \;
+	touch stamps/regen-newlib;
 
 NEWLIB_FLAGS=""
 .PHONY: cross-newlib
@@ -214,7 +215,7 @@ patch-binutils stamps/patch-binutils: stamps/extract-binutils stamps/extract-avr
 	done ; \
 	popd ; \
 	[ -d stamps ] || mkdir stamps
-	touch stamps/patch-binutils ;
+	touch stamps/patch-binutils;
 
 .PHONY: regen-binutils
 regen-binutils stamps/regen-binutils: stamps/patch-binutils
@@ -227,7 +228,7 @@ regen-binutils stamps/regen-binutils: stamps/patch-binutils
 	done; \
 	popd; \
 	[ -d stamps ] || mkdir stamps ;
-	touch stamps/regen-binutils ;
+	touch stamps/regen-binutils;
 
 .PHONY: build-binutils
 build-binutils stamps/build-binutils: stamps/prep-binutils
@@ -273,7 +274,7 @@ patch-gcc stamps/patch-gcc: stamps/extract-gcc stamps/extract-avr32patches
 	done ; \
 	popd ;
 	[ -d stamps ] || mkdir stamps
-	touch stamps/patch-gcc ;
+	touch stamps/patch-gcc;
 
 CFLAGS_FOR_TARGET=""
 .PHONY: cross-gcc
@@ -299,7 +300,7 @@ build-gcc stamps/build-gcc: stamps/install-binutils stamps/prep-newlib stamps/pr
 	--with-bugurl=$(BUG_URL) && \
 	$(MAKE) -j$(PROCS)
 	[ -d stamps ] || mkdir stamps
-	touch stamps/build-gcc \;
+	touch stamps/build-gcc;
 
 .PHONY: install-gcc
 install-gcc stamps/install-gcc:  stamps/build-gcc
@@ -307,7 +308,7 @@ install-gcc stamps/install-gcc:  stamps/build-gcc
 	$(MAKE) installdirs install-target && \
 	$(MAKE) -C gcc install-common install-cpp install- install-driver install-headers install-man
 	[ -d stamps ] || mkdir stamps
-	touch stamps/install-gcc \;
+	touch stamps/install-gcc;
 
 
 
