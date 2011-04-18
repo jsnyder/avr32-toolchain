@@ -34,6 +34,17 @@ MPC_VERSION = 0.8.1
 GDB_VERSION = 6.7.1
 BINUTILS_VERSION = 2.20.1
 NEWLIB_VERSION = 1.16.0
+AUTOCONF_VERSION = 2.64
+AUTOMAKE_VERSION = 1.11
+
+
+AUTOCONF_ARCHIVE = autoconf-$(AUTOCONF_VERSION).tar.bz2
+AUTOCONF_URL = http://mirror.anl.gov/pub/gnu/autoconf/$(AUTOCONF_ARCHIVE)
+AUTOCONF_MD5 = ef400d672005e0be21e0d20648169074
+
+AUTOMAKE_ARCHIVE = automake-$(AUTOMAKE_VERSION).tar.gz
+AUTOMAKE_URL = http://mirror.anl.gov/pub/gnu/automake/$(AUTOMAKE_ARCHIVE)
+AUTOMAKE_MD5 = 4db4efe027e26b33930a7e151de19d0f
 
 GCC_ARCHIVE = gcc-$(GCC_VERSION).tar.bz2
 GCC_URL = http://mirror.anl.gov/pub/gnu/gcc/gcc-$(GCC_VERSION)/$(GCC_ARCHIVE)
@@ -89,6 +100,16 @@ downloads/$(NEWLIB_ARCHIVE) download-newlib:
 downloads/$(BINUTILS_ARCHIVE) download-binutils:
 	[ -d downloads ] || mkdir downloads ;
 	cd downloads && curl -LO $(BINUTILS_URL)
+
+
+
+############### AUTOCONF ###############
+
+
+
+
+
+############### AUTOMAKE ###############
 
 
 
