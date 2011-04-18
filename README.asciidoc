@@ -1,3 +1,4 @@
+# -*- Doc -*-
 = AVR32 Toolchain Builder =
 James Snyder <jbsnyder@fanplastic.org>
 v1.0, Sat Apr 16 20:40:49 CDT 2011

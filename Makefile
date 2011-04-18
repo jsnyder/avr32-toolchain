@@ -27,6 +27,8 @@ PREFIX=$(HOME)/avr32-tools/
 PROCS=5
 PATH := ${PREFIX}/bin:${PATH}
 
+BUG_URL = https://github.com/jsnyder/avr32-toolchain
+
 GCC_VERSION = 4.4.3
 MPC_VERSION = 0.8.1
 GDB_VERSION = 6.7.1
@@ -35,23 +37,24 @@ NEWLIB_VERSION = 1.16.0
 
 GCC_ARCHIVE = gcc-$(GCC_VERSION).tar.bz2
 GCC_URL = http://mirror.anl.gov/pub/gnu/gcc/gcc-$(GCC_VERSION)/$(GCC_ARCHIVE)
+GCC_MD5 = fe1ca818fc6d2caeffc9051fe67ff103
 
 GDB_ARCHIVE = gdb-$(GDB_VERSION).tar.bz2
 GDB_URL = http://mirror.anl.gov/pub/gnu/gdb/$(GDB_ARCHIVE)
+GDB_MD5 = 30a6bf36eded4ae5a152d7d71b86dc14
 
 BINUTILS_ARCHIVE = binutils-$(BINUTILS_VERSION).tar.bz2
 BINUTILS_URL = http://mirror.anl.gov/pub/gnu/binutils/$(BINUTILS_ARCHIVE)
+BINUTILS_MD5 = 9cdfb9d6ec0578c166d3beae5e15c4e5
 
 NEWLIB_ARCHIVE = newlib-$(NEWLIB_VERSION).tar.gz
 NEWLIB_URL = ftp://sources.redhat.com/pub/newlib/$(NEWLIB_ARCHIVE)
+NEWLIB_MD5 = bf8f1f9e3ca83d732c00a79a6ef29bc4
 
 AVR32PATCHES_ARCHIVE = avr32-gnu-toolchain-3.2.0.233-source.zip
 AVR32PATCHES_URL = http://distribute.atmel.no/tools/opensource/as5-beta/$(AVR32PATCHES_ARCHIVE)
+AVR32PATCHES_MD5 = b009a7190071c7466ce14f8acb2796ae
 
-# MD5(binutils-2.20.1.tar.bz2)= 9cdfb9d6ec0578c166d3beae5e15c4e5
-# MD5(gcc-4.4.3.tar.bz2)= fe1ca818fc6d2caeffc9051fe67ff103
-# MD5(gdb-6.7.1.tar.bz2)= 30a6bf36eded4ae5a152d7d71b86dc14
-# MD5(newlib-1.16.0.tar.gz)= bf8f1f9e3ca83d732c00a79a6ef29bc4
 
 .PHONY: install-cross
 install-cross: stamps/install-binutils stamps/install-gcc stamps/install-newlib stamps/install-headers
@@ -64,6 +67,8 @@ ifneq ($(USER),root)
 	@echo e.g.: sudo make targetname
 	@exit 1
 endif
+
+
 
 .PHONY: download-gcc
 downloads/$(GCC_ARCHIVE) download-gcc:
@@ -88,27 +93,6 @@ downloads/$(BINUTILS_ARCHIVE) download-binutils:
 
 
 
-.PHONY: download
-download: $(LOCAL_SOURCE)
-	@(t1=`openssl md5 $(LOCAL_SOURCE) | cut -f 2 -d " " -` && \
-	test $$t1 = $(MD5_CHECKSUM) || \
-	echo "Bad Checksum! Please remove the following file and retry:\n$(LOCAL_SOURCE)")
-
-$(LOCAL_BASE)/%-$(CS_VERSION).tar.bz2 : download
-ifeq ($(USER),root)
-	@(tgt=`tar -jtf $(LOCAL_SOURCE) | grep  $*` && \
-	sudo -u $(SUDO_USER) tar -jxvf $(LOCAL_SOURCE) $$tgt)
-else
-	@(tgt=`tar -jtf $(LOCAL_SOURCE) | grep  $*` && \
-	tar -jxvf $(LOCAL_SOURCE) $$tgt)
-endif
-
-mpc-$(MPC_VERSION) : $(LOCAL_BASE)/mpc-$(CS_VERSION).tar.bz2
-ifeq ($(USER),root)
-	sudo -u $(SUDO_USER) tar -jxf $<
-else
-	tar -jxf $<
-endif
 
 ############# AVR32 PATCHES ############
 
@@ -118,6 +102,9 @@ downloads/$(AVR32PATCHES_ARCHIVE) download-avr32patches:
 
 .PHONY: extract-avr32patches
 extract-avr32patches stamps/extract-avr32patches : downloads/$(AVR32PATCHES_ARCHIVE)
+	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
+	test $$t1 = $(AVR32PATCHES_MD5) || \
+	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
 	unzip -o $<
 	[ -d stamps ] || mkdir stamps
 	touch stamps/extract-avr32patches;
@@ -140,7 +127,10 @@ prep-newlib stamps/prep-newlib: stamps/regen-newlib
 
 
 .PHONY: extract-newlib
-extract-newlib stamps/extract-newlib : downloads/newlib-$(NEWLIB_VERSION).tar.gz
+extract-newlib stamps/extract-newlib : downloads/$(NEWLIB_ARCHIVE)
+	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
+	test $$t1 = $(NEWLIB_MD5) || \
+	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
 	tar -xf $<
 	[ -d stamps ] || mkdir stamps
 	touch stamps/extract-newlib;
@@ -202,7 +192,10 @@ prep-binutils stamps/prep-binutils: stamps/regen-binutils
 	touch stamps/prep-binutils;
 
 .PHONY: extract-binutils
-extract-binutils stamps/extract-binutils: downloads/binutils-$(BINUTILS_VERSION).tar.bz2
+extract-binutils stamps/extract-binutils: downloads/$(BINUTILS_ARCHIVE)
+	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
+	test $$t1 = $(BINUTILS_MD5) || \
+	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
 	tar -jxf $< ;
 	[ -d stamps ] || mkdir stamps ;
 	touch stamps/extract-binutils;
@@ -233,7 +226,7 @@ regen-binutils stamps/regen-binutils: stamps/patch-binutils
 .PHONY: build-binutils
 build-binutils stamps/build-binutils: stamps/prep-binutils
 	mkdir -p build/binutils && cd build/binutils && \
-	pushd binutils-$(BINUTILS_VERSION) ; \
+	pushd ../../binutils-$(BINUTILS_VERSION) ; \
 	make clean ; \
 	popd ; \
 	../../binutils-$(BINUTILS_VERSION)/configure			\
@@ -261,7 +254,10 @@ prep-gcc stamps/prep-gcc: stamps/patch-gcc
 	touch stamps/prep-gcc;
 
 .PHONY: extract-gcc
-extract-gcc stamps/extract-gcc: downloads/gcc-$(GCC_VERSION).tar.bz2
+extract-gcc stamps/extract-gcc: downloads/$(GCC_ARCHIVE)
+	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
+	test $$t1 = $(GCC_MD5) || \
+	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
 	tar -jxf $< ;
 	[ -d stamps ] || mkdir stamps ;
 	touch stamps/extract-gcc;
@@ -337,6 +333,13 @@ mpc: mpc-$(MPC_VERSION)/ sudomode
 	sudo -u $(SUDO_USER) ../../mpc-$(MPC_VERSION)/configure --disable-shared && \
 	sudo -u $(SUDO_USER) $(MAKE) -j$(PROCS) all && \
 	$(MAKE) install
+
+mpc-$(MPC_VERSION) : $(LOCAL_BASE)/mpc-$(CS_VERSION).tar.bz2
+ifeq ($(USER),root)
+	sudo -u $(SUDO_USER) tar -jxf $<
+else
+	tar -jxf $<
+endif
 
 mpfr: gmp mpfr-$(CS_BASE)/ sudomode
 	sudo -u $(SUDO_USER) mkdir -p build/mpfr && cd build/mpfr && \
