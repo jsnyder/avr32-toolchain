@@ -39,11 +39,6 @@ With homebrew you can install those dependencies like this:
 brew install mpfr gmp libmpc
 ----
 
-Additionally, you may find that you need more recent versions of
-autoconf and automake for this build to run correctly, I'm currently
-investigating options on this and will update instructions and the
-Makefile when a fairly streamlined solution is found.
-
 
 === Requirements (Ubuntu) ===
 

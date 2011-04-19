@@ -21,30 +21,24 @@
 # THE SOFTWARE.
 
 
-SHELL = /bin/bash
-TARGET=avr32
-PREFIX=$(HOME)/avr32-tools/
-PROCS=5
-PATH := ${PREFIX}/bin:${PATH}
+SHELL       = /bin/bash
+TARGET      = avr32
+PREFIX      = $(HOME)/avr32-tools/
+SUPP_PREFIX = $(CURDIR)/supp
+PROCS       = 5
+PATH       := ${PREFIX}/bin:${SUPP_PREFIX}/bin:${PATH}
+AUTOCONF    = $(SUPP_PREFIX)/bin/autoconf
+AUTOMAKE    = $(SUPP_PREFIX)/bin/automake
 
 BUG_URL = https://github.com/jsnyder/avr32-toolchain
 
-GCC_VERSION = 4.4.3
-MPC_VERSION = 0.8.1
-GDB_VERSION = 6.7.1
+
+#### PRIMARY TOOLCHAIN VERSIONS / URLS #####
+GCC_VERSION      = 4.4.3
+GDB_VERSION      = 6.7.1
 BINUTILS_VERSION = 2.20.1
-NEWLIB_VERSION = 1.16.0
-AUTOCONF_VERSION = 2.64
-AUTOMAKE_VERSION = 1.11
-
-
-AUTOCONF_ARCHIVE = autoconf-$(AUTOCONF_VERSION).tar.bz2
-AUTOCONF_URL = http://mirror.anl.gov/pub/gnu/autoconf/$(AUTOCONF_ARCHIVE)
-AUTOCONF_MD5 = ef400d672005e0be21e0d20648169074
-
-AUTOMAKE_ARCHIVE = automake-$(AUTOMAKE_VERSION).tar.gz
-AUTOMAKE_URL = http://mirror.anl.gov/pub/gnu/automake/$(AUTOMAKE_ARCHIVE)
-AUTOMAKE_MD5 = 4db4efe027e26b33930a7e151de19d0f
+NEWLIB_VERSION   = 1.16.0
+DFU_VERSION      = 0.5.4
 
 GCC_ARCHIVE = gcc-$(GCC_VERSION).tar.bz2
 GCC_URL = http://mirror.anl.gov/pub/gnu/gcc/gcc-$(GCC_VERSION)/$(GCC_ARCHIVE)
@@ -66,6 +60,26 @@ AVR32PATCHES_ARCHIVE = avr32-gnu-toolchain-3.2.0.233-source.zip
 AVR32PATCHES_URL = http://distribute.atmel.no/tools/opensource/as5-beta/$(AVR32PATCHES_ARCHIVE)
 AVR32PATCHES_MD5 = b009a7190071c7466ce14f8acb2796ae
 
+DFU_ARCHIVE = dfu-programmer-$(DFU_VERSION).tar.gz
+DFU_URL = http://surfnet.dl.sourceforge.net/project/dfu-programmer/dfu-programmer/$(DFU_VERSION)/$(DFU_ARCHIVE)
+DFU_MD5 = 707dcd0f957a74e92456ea6919faa772
+
+
+##### SUPPORT TOOLS VERSIONS / URLS ######
+AUTOCONF_VERSION = 2.64
+AUTOMAKE_VERSION = 1.11
+MPC_VERSION = 0.8.1
+
+AUTOCONF_ARCHIVE = autoconf-$(AUTOCONF_VERSION).tar.bz2
+AUTOCONF_URL = http://mirror.anl.gov/pub/gnu/autoconf/$(AUTOCONF_ARCHIVE)
+AUTOCONF_MD5 = ef400d672005e0be21e0d20648169074
+
+AUTOMAKE_ARCHIVE = automake-$(AUTOMAKE_VERSION).tar.bz2
+AUTOMAKE_URL = http://mirror.anl.gov/pub/gnu/automake/$(AUTOMAKE_ARCHIVE)
+AUTOMAKE_MD5 = 4db4efe027e26b33930a7e151de19d0f
+
+
+
 
 .PHONY: install-cross
 install-cross: stamps/install-binutils stamps/install-gcc stamps/install-newlib stamps/install-headers
@@ -81,37 +95,85 @@ endif
 
 
 
-.PHONY: download-gcc
-downloads/$(GCC_ARCHIVE) download-gcc:
-	[ -d downloads ] || mkdir downloads ;
-	cd downloads && curl -LO $(GCC_URL)
+
 
 .PHONY: download-gdb
 downloads/$(GDB_ARCHIVE) download-gdb:
 	[ -d downloads ] || mkdir downloads ;
 	cd downloads && curl -LO $(GDB_URL)
 
-.PHONY: download-newlib
-downloads/$(NEWLIB_ARCHIVE) download-newlib:
+
+
+
+.PHONY: install-supp-tools
+install-supp-tools stamps/install-supp-tools: install-autoconf install-automake
+	[ -d stamps ] || mkdir stamps ;
+	touch stamps/install-supp-tools;
+
+
+############# SUPP: AUTOCONF ############
+
+.PHONY: download-autoconf
+downloads/$(AUTOCONF_ARCHIVE) download-autoconf:
 	[ -d downloads ] || mkdir downloads ;
-	cd downloads && curl -LO $(NEWLIB_URL)
+	cd downloads && curl -LO $(AUTOCONF_URL)
 
-.PHONY: download-binutils
-downloads/$(BINUTILS_ARCHIVE) download-binutils:
+.PHONY: extract-autoconf
+extract-autoconf stamps/extract-autoconf: downloads/$(AUTOCONF_ARCHIVE)
+	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
+	test $$t1 = $(AUTOCONF_MD5) || \
+	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
+	tar -jxf $< ;
+	[ -d stamps ] || mkdir stamps ;
+	touch stamps/extract-autoconf;
+
+.PHONY: build-autoconf
+build-autoconf stamps/build-autoconf: stamps/extract-autoconf
+	mkdir -p build/autoconf && cd build/autoconf && \
+	../../autoconf-$(AUTOCONF_VERSION)/configure --prefix=$(SUPP_PREFIX) && \
+	$(MAKE) -j$(PROCS)
+	[ -d stamps ] || mkdir stamps
+	touch stamps/build-autoconf;
+
+.PHONY: install-autoconf
+install-autoconf stamps/install-autoconf:  stamps/build-autoconf
+	cd build/autoconf && \
+	$(MAKE) install
+	[ -d stamps ] || mkdir stamps
+	touch stamps/install-autoconf;
+
+
+
+############ SUPP: AUTOMAKE ############
+
+.PHONY: download-automake
+downloads/$(AUTOMAKE_ARCHIVE) download-automake:
 	[ -d downloads ] || mkdir downloads ;
-	cd downloads && curl -LO $(BINUTILS_URL)
+	cd downloads && curl -LO $(AUTOMAKE_URL)
 
+.PHONY: extract-automake
+extract-automake stamps/extract-automake: downloads/$(AUTOMAKE_ARCHIVE)
+	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
+	test $$t1 = $(AUTOMAKE_MD5) || \
+	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
+	tar -jxf $< ;
+	[ -d stamps ] || mkdir stamps ;
+	touch stamps/extract-automake;
 
+.PHONY: build-automake
+build-automake stamps/build-automake: stamps/extract-automake stamps/install-autoconf
+	mkdir -p build/automake && cd build/automake && \
+	../../automake-$(AUTOMAKE_VERSION)/configure --prefix=$(SUPP_PREFIX) && \
+	$(MAKE) -j$(PROCS)
+	[ -d stamps ] || mkdir stamps
+	touch stamps/build-automake;
 
-############### AUTOCONF ###############
-
-
-
-
-
-############### AUTOMAKE ###############
-
-
+.PHONY: install-automake
+install-automake stamps/install-automake:  stamps/build-automake
+	cd build/automake && \
+	$(MAKE) install
+	[ -d stamps ] || mkdir stamps
+	touch stamps/install-automake;
 
 
 
@@ -141,6 +203,11 @@ install-headers stamps/install-headers: stamps/install-gcc
 
 ################ NEWLIB ################
 
+.PHONY: download-newlib
+downloads/$(NEWLIB_ARCHIVE) download-newlib:
+	[ -d downloads ] || mkdir downloads ;
+	cd downloads && curl -LO $(NEWLIB_URL)
+
 .PHONY: prep-newlib
 prep-newlib stamps/prep-newlib: stamps/regen-newlib
 	[ -d stamps ] || mkdir stamps
@@ -168,20 +235,24 @@ patch-newlib stamps/patch-newlib: stamps/extract-newlib stamps/extract-avr32patc
 	touch stamps/patch-newlib;
 
 .PHONY: regen-newlib
-regen-newlib stamps/regen-newlib: stamps/patch-newlib
+regen-newlib stamps/regen-newlib: stamps/patch-newlib stamps/install-supp-tools
 	pushd newlib-$(NEWLIB_VERSION) ; \
-	autoconf; automake ; \
+	$(SUPP_PREFIX)/bin/autoconf; $(SUPP_PREFIX)/bin/automake ; \
 	for dir in newlib/libc/machine/avr32 newlib/libc/machine newlib/libc/sys/avr32 newlib/libc/sys; do \
 	  pushd $$dir ; \
-	  aclocal -I ../.. -I ../../.. -I ../../../.. ; \
-	  autoconf; automake; \
+	  $(SUPP_PREFIX)/bin/aclocal -I ../.. -I ../../.. -I ../../../.. ; \
+	  $(SUPP_PREFIX)/bin/autoconf; $(SUPP_PREFIX)/bin/automake; \
 	  popd ; \
 	done; \
 	popd;
 	[ -d stamps ] || mkdir stamps
 	touch stamps/regen-newlib;
 
-NEWLIB_FLAGS=""
+NEWLIB_FLAGS="-ffunction-sections -fdata-sections	\
+-DPREFER_SIZE_OVER_SPEED -D__OPTIMIZE_SIZE__ -g -Os	\
+-fomit-frame-pointer -fno-unroll-loops -D__BUFSIZ__=128	\
+-DSMALL_MEMORY"
+
 .PHONY: cross-newlib
 build-newlib stamps/build-newlib: stamps/prep-newlib stamps/install-binutils stamps/install-gcc
 	mkdir -p build/newlib && cd build/newlib && \
@@ -206,6 +277,11 @@ install-newlib stamps/install-newlib: stamps/build-newlib
 	touch stamps/install-newlib;
 
 ################ BINUTILS ################
+
+.PHONY: download-binutils
+downloads/$(BINUTILS_ARCHIVE) download-binutils:
+	[ -d downloads ] || mkdir downloads ;
+	cd downloads && curl -LO $(BINUTILS_URL)
 
 .PHONY: prep-binutils
 prep-binutils stamps/prep-binutils: stamps/regen-binutils
@@ -232,12 +308,17 @@ patch-binutils stamps/patch-binutils: stamps/extract-binutils stamps/extract-avr
 	touch stamps/patch-binutils;
 
 .PHONY: regen-binutils
-regen-binutils stamps/regen-binutils: stamps/patch-binutils
+regen-binutils stamps/regen-binutils: stamps/patch-binutils stamps/install-supp-tools
 	pushd binutils-$(BINUTILS_VERSION) ; \
-	autoconf ; \
+	$(SUPP_PREFIX)/bin/aclocal -I config ; \
+	$(SUPP_PREFIX)/bin/autoconf ; \
+	$(SUPP_PREFIX)/bin/automake ; \
+	$(SUPP_PREFIX)/bin/autoheader ; \
 	for dir in bfd opcodes binutils gas ld; do \
 	  pushd $$dir ; \
-	  autoconf; automake; autoheader; \
+	  $(SUPP_PREFIX)/bin/autoconf; \
+	  $(SUPP_PREFIX)/bin/automake; \
+	  $(SUPP_PREFIX)/bin/autoheader; \
 	  popd ; \
 	done; \
 	popd; \
@@ -245,12 +326,12 @@ regen-binutils stamps/regen-binutils: stamps/patch-binutils
 	touch stamps/regen-binutils;
 
 .PHONY: build-binutils
-build-binutils stamps/build-binutils: stamps/prep-binutils
+build-binutils stamps/build-binutils: stamps/regen-binutils stamps/install-supp-tools
 	mkdir -p build/binutils && cd build/binutils && \
 	pushd ../../binutils-$(BINUTILS_VERSION) ; \
 	make clean ; \
 	popd ; \
-	../../binutils-$(BINUTILS_VERSION)/configure			\
+	../../binutils-$(BINUTILS_VERSION)/configure   --enable-maintainer-mode		\
 	--prefix=$(PREFIX) --target=$(TARGET) --disable-nls		\
 	--disable-shared --disable-werror				\
 	--with-sysroot=$(PREFIX)/$(TARGET) --with-bugurl=$(BUG_URL) &&	\
@@ -267,7 +348,44 @@ install-binutils stamps/install-binutils: stamps/build-binutils
 	[ -d stamps ] || mkdir stamps ;
 	touch stamps/install-binutils;
 
+########## DFU PROGRAMMER ###########
+
+.PHONY: download-dfu
+downloads/$(DFU_ARCHIVE) download-dfu:
+	[ -d downloads ] || mkdir downloads ;
+	cd downloads && curl -LO $(DFU_URL)
+
+.PHONY: extract-dfu
+extract-dfu stamps/extract-dfu: downloads/$(DFU_ARCHIVE)
+	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
+	test $$t1 = $(DFU_MD5) || \
+	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
+	tar -jxf $< ;
+	[ -d stamps ] || mkdir stamps ;
+	touch stamps/extract-dfu;
+
+.PHONY: build-dfu
+build-dfu stamps/build-dfu: stamps/extract-dfu
+	mkdir -p build/dfu-programmer && cd build/dfu-programmer && \
+	../../dfu-programmer-$(DFU_VERSION)/configure --prefix=$(PREFIX) && \
+	$(MAKE) -j$(PROCS)
+	[ -d stamps ] || mkdir stamps
+	touch stamps/build-dfu;
+
+.PHONY: install-dfu
+install-dfu stamps/install-dfu:  stamps/build-dfu
+	cd build/dfu-programmer && \
+	$(MAKE) install
+	[ -d stamps ] || mkdir stamps
+	touch stamps/install-dfu;
+
+
 ################ GCC ################
+
+.PHONY: download-gcc
+downloads/$(GCC_ARCHIVE) download-gcc:
+	[ -d downloads ] || mkdir downloads ;
+	cd downloads && curl -LO $(GCC_URL)
 
 .PHONY: prep-gcc
 prep-gcc stamps/prep-gcc: stamps/patch-gcc
@@ -293,8 +411,11 @@ patch-gcc stamps/patch-gcc: stamps/extract-gcc stamps/extract-avr32patches
 	[ -d stamps ] || mkdir stamps
 	touch stamps/patch-gcc;
 
-CFLAGS_FOR_TARGET=""
-.PHONY: cross-gcc
+CFLAGS_FOR_TARGET="-ffunction-sections -fdata-sections			\
+-fomit-frame-pointer -DPREFER_SIZE_OVER_SPEED -D__OPTIMIZE_SIZE__ -g	\
+-Os -fno-unroll-loops"
+
+.PHONY: build-gcc
 build-gcc stamps/build-gcc: stamps/install-binutils stamps/prep-newlib stamps/prep-gcc
 	mkdir -p build/gcc && cd build/gcc && \
 	pushd ../../gcc-$(GCC_VERSION) ; \
@@ -399,4 +520,4 @@ cross-gdb: gdb-$(CS_BASE)/
 
 .PHONY : clean
 clean:
-	rm -rf build *-$(CS_BASE) binutils-* gcc-* gdb-* newlib-* mpc-* $(LOCAL_BASE) stamps/*
+	rm -rf build *-$(CS_BASE) binutils-* gcc-* gdb-* newlib-* mpc-* $(LOCAL_BASE) stamps/* supp
