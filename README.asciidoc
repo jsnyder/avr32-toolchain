@@ -1,14 +1,11 @@
-# -*- Doc -*-
-= AVR32 Toolchain Builder =
-James Snyder <jbsnyder@fanplastic.org>
-v1.0, Sat Apr 16 20:40:49 CDT 2011
-
 == AVR32 Toolchain Builder ==
 
 This is a early implementation of a Makefile for an AVR32 toolchain
-builder for Mac OS X & Linux. Currently more work is required before
-this is generally useful, at which time a fuller README will be
-fleshed out there.
+builder for Mac OS X & Linux, and it has not been extensively tested.
+That said the patches are taken directly from Atmel, and basic testing
+is done with some more complicated builds (i.e.:
+link:http://eluaproject.net[eLua] in float and integer mode) to ensure
+that that at least these work after toolchain modifications.
 
 Note: If you have previously built a toolchain of another version, out
 of the same builder directory, make sure to do the following first
@@ -36,7 +33,7 @@ that can be used for both Linux & OS X.
 
 With homebrew you can install those dependencies like this:
 ----
-brew install mpfr gmp libmpc
+brew install mpfr gmp libmpc texinfo
 ----
 
 
