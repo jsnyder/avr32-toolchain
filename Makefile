@@ -337,6 +337,7 @@ build-binutils stamps/build-binutils: stamps/regen-binutils stamps/install-supp-
 	--with-sysroot=$(PREFIX)/$(TARGET) --with-bugurl=$(BUG_URL) &&	\
 	$(MAKE) maybe-configure-bfd; \
 	$(MAKE) -C bfd headers; \
+	$(MAKE) all-bfd TARGET-bfd=headers; \
 	$(MAKE) -j$(PROCS)
 	[ -d stamps ] || mkdir stamps ;
 	touch stamps/build-binutils;
