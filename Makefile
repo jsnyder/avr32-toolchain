@@ -521,4 +521,4 @@ cross-gdb: gdb-$(CS_BASE)/
 
 .PHONY : clean
 clean:
-	rm -rf build *-$(CS_BASE) binutils-* gcc-* gdb-* newlib-* mpc-* $(LOCAL_BASE) stamps/* supp
+	rm -rf build *-$(CS_BASE) binutils-* gcc-* gdb-* newlib-* mpc-* $(LOCAL_BASE) dfu-programmer-* autoconf-* automake-* stamps/* source supp
