@@ -130,7 +130,7 @@ extract-autoconf stamps/extract-autoconf: downloads/$(AUTOCONF_ARCHIVE)
 .PHONY: build-autoconf
 build-autoconf stamps/build-autoconf: stamps/extract-autoconf
 	mkdir -p build/autoconf && cd build/autoconf && \
-	../../autoconf-$(AUTOCONF_VERSION)/configure --prefix=$(SUPP_PREFIX) && \
+	../../autoconf-$(AUTOCONF_VERSION)/configure --prefix="$(SUPP_PREFIX)" && \
 	$(MAKE) -j$(PROCS)
 	[ -d stamps ] || mkdir stamps
 	touch stamps/build-autoconf;
@@ -163,7 +163,7 @@ extract-automake stamps/extract-automake: downloads/$(AUTOMAKE_ARCHIVE)
 .PHONY: build-automake
 build-automake stamps/build-automake: stamps/extract-automake stamps/install-autoconf
 	mkdir -p build/automake && cd build/automake && \
-	../../automake-$(AUTOMAKE_VERSION)/configure --prefix=$(SUPP_PREFIX) && \
+	../../automake-$(AUTOMAKE_VERSION)/configure --prefix="$(SUPP_PREFIX)" && \
 	$(MAKE) -j$(PROCS)
 	[ -d stamps ] || mkdir stamps
 	touch stamps/build-automake;
@@ -197,8 +197,8 @@ extract-avr32patches stamps/extract-avr32patches : downloads/$(AVR32PATCHES_ARCH
 
 .PHONY: install-headers
 install-headers stamps/install-headers: stamps/install-gcc
-	mkdir -p  $(PREFIX)/$(TARGET)/include/avr32 && \
-	cp -f avr32-headers/* $(PREFIX)/$(TARGET)/include/avr32/
+	mkdir -p  "$(PREFIX)/$(TARGET)/include/avr32" && \
+	cp -f avr32-headers/* "$(PREFIX)/$(TARGET)/include/avr32/"
 
 
 ################ NEWLIB ################
@@ -237,11 +237,11 @@ patch-newlib stamps/patch-newlib: stamps/extract-newlib stamps/extract-avr32patc
 .PHONY: regen-newlib
 regen-newlib stamps/regen-newlib: stamps/patch-newlib stamps/install-supp-tools
 	pushd newlib-$(NEWLIB_VERSION) ; \
-	$(SUPP_PREFIX)/bin/autoconf; $(SUPP_PREFIX)/bin/automake ; \
+	"$(SUPP_PREFIX)/bin/autoconf"; "$(SUPP_PREFIX)/bin/automake" ; \
 	for dir in newlib/libc/machine/avr32 newlib/libc/machine newlib/libc/sys/avr32 newlib/libc/sys; do \
 	  pushd $$dir ; \
-	  $(SUPP_PREFIX)/bin/aclocal -I ../.. -I ../../.. -I ../../../.. ; \
-	  $(SUPP_PREFIX)/bin/autoconf; $(SUPP_PREFIX)/bin/automake; \
+	  "$(SUPP_PREFIX)/bin/aclocal" -I ../.. -I ../../.. -I ../../../.. ; \
+	  "$(SUPP_PREFIX)/bin/autoconf"; "$(SUPP_PREFIX)/bin/automake"; \
 	  popd ; \
 	done; \
 	popd;
@@ -310,15 +310,15 @@ patch-binutils stamps/patch-binutils: stamps/extract-binutils stamps/extract-avr
 .PHONY: regen-binutils
 regen-binutils stamps/regen-binutils: stamps/patch-binutils stamps/install-supp-tools
 	pushd binutils-$(BINUTILS_VERSION) ; \
-	$(SUPP_PREFIX)/bin/aclocal -I config ; \
-	$(SUPP_PREFIX)/bin/autoconf ; \
-	$(SUPP_PREFIX)/bin/automake ; \
-	$(SUPP_PREFIX)/bin/autoheader ; \
+	"$(SUPP_PREFIX)/bin/aclocal" -I config ; \
+	"$(SUPP_PREFIX)/bin/autoconf" ; \
+	"$(SUPP_PREFIX)/bin/automake" ; \
+	"$(SUPP_PREFIX)/bin/autoheader" ; \
 	for dir in bfd opcodes binutils gas ld; do \
 	  pushd $$dir ; \
-	  $(SUPP_PREFIX)/bin/autoconf; \
-	  $(SUPP_PREFIX)/bin/automake; \
-	  $(SUPP_PREFIX)/bin/autoheader; \
+	  "$(SUPP_PREFIX)/bin/autoconf"; \
+	  "$(SUPP_PREFIX)/bin/automake"; \
+	  "$(SUPP_PREFIX)/bin/autoheader"; \
 	  popd ; \
 	done; \
 	popd; \
@@ -332,9 +332,9 @@ build-binutils stamps/build-binutils: stamps/regen-binutils stamps/install-supp-
 	make clean ; \
 	popd ; \
 	../../binutils-$(BINUTILS_VERSION)/configure   --enable-maintainer-mode		\
-	--prefix=$(PREFIX) --target=$(TARGET) --disable-nls		\
+	--prefix="$(PREFIX)" --target=$(TARGET) --disable-nls		\
 	--disable-shared --disable-werror				\
-	--with-sysroot=$(PREFIX)/$(TARGET) --with-bugurl=$(BUG_URL) &&	\
+	--with-sysroot="$(PREFIX)/$(TARGET)" --with-bugurl=$(BUG_URL) &&	\
 	$(MAKE) maybe-configure-bfd; \
 	$(MAKE) -C bfd headers; \
 	$(MAKE) all-bfd TARGET-bfd=headers; \
@@ -368,7 +368,7 @@ extract-dfu stamps/extract-dfu: downloads/$(DFU_ARCHIVE)
 .PHONY: build-dfu
 build-dfu stamps/build-dfu: stamps/extract-dfu
 	mkdir -p build/dfu-programmer && cd build/dfu-programmer && \
-	../../dfu-programmer-$(DFU_VERSION)/configure --prefix=$(PREFIX) && \
+	../../dfu-programmer-$(DFU_VERSION)/configure --prefix="$(PREFIX)" && \
 	$(MAKE) -j$(PROCS)
 	[ -d stamps ] || mkdir stamps
 	touch stamps/build-dfu;
@@ -422,20 +422,20 @@ build-gcc stamps/build-gcc: stamps/install-binutils stamps/prep-newlib stamps/pr
 	pushd ../../gcc-$(GCC_VERSION) ; \
 	make clean ; \
 	popd ; \
-	../../gcc-$(GCC_VERSION)/configure --prefix=$(PREFIX)		\
+	../../gcc-$(GCC_VERSION)/configure --prefix="$(PREFIX)"		\
 	--target=$(TARGET) --enable-languages="c" --with-gnu-ld		\
 	--with-gnu-as --with-newlib --disable-nls --disable-libssp	\
 	--with-newlib --with-dwarf2 --enable-sjlj-exceptions		\
 	--enable-version-specific-runtime-libs --disable-libstdcxx-pch	\
 	--disable-shared						\
-	--with-build-time-tools=$(PREFIX)/$(TARGET)/bin			\
+	--with-build-time-tools="$(PREFIX)/$(TARGET)/bin"		\
 	--enable-cxx-flags=$(CFLAGS_FOR_TARGET)				\
-	--with-sysroot=$(PREFIX)/$(TARGET)				\
-	--with-build-sysroot=$(PREFIX)/$(TARGET)			\
-	--with-build-time-tools=$(PREFIX)/$(TARGET)/bin			\
+	--with-sysroot="$(PREFIX)/$(TARGET)"				\
+	--with-build-sysroot="$(PREFIX)/$(TARGET)"			\
+	--with-build-time-tools="$(PREFIX)/$(TARGET)/bin"		\
 	CFLAGS_FOR_TARGET=$(CFLAGS_FOR_TARGET)				\
-	LDFLAGS_FOR_TARGET="--sysroot=$(PREFIX)/$(TARGET)"		\
-	CPPFLAGS_FOR_TARGET="--sysroot=$(PREFIX)/$(TARGET)"		\
+	LDFLAGS_FOR_TARGET="--sysroot=\"$(PREFIX)/$(TARGET)\""		\
+	CPPFLAGS_FOR_TARGET="--sysroot=\"$(PREFIX)/$(TARGET)\""		\
 	--with-bugurl=$(BUG_URL) && \
 	$(MAKE) -j$(PROCS)
 	[ -d stamps ] || mkdir stamps
@@ -496,7 +496,7 @@ mpfr: gmp mpfr-$(CS_BASE)/ sudomode
 
 cross-g++: cross-binutils cross-gcc cross-newlib gcc-$(GCC_VERSION)-$(CS_BASE)/ gcc-optsize-patch
 	mkdir -p build/g++ && cd build/g++ && \
-	../../gcc-$(GCC_VERSION)-$(CS_BASE)/configure --prefix=$(PREFIX) --target=$(TARGET) \
+	../../gcc-$(GCC_VERSION)-$(CS_BASE)/configure --prefix="$(PREFIX)" --target="$(TARGET)" \
 	--enable-languages="c++" --with-gnu-ld --with-gnu-as --with-newlib --disable-nls \
 	--disable-libssp --with-newlib --without-headers --disable-shared \
 	--disable-threads --disable-libmudflap --disable-libgomp --disable-libstdcxx-pch \
@@ -513,11 +513,11 @@ cross-gdb: gdb-$(CS_BASE)/
 	pushd ../../gdb-$(CS_BASE) ; \
 	make clean ; \
 	popd ; \
-	../../gdb-$(CS_BASE)/configure --prefix=$(PREFIX) --target=$(TARGET) --disable-werror && \
+	../../gdb-$(CS_BASE)/configure --prefix="$(PREFIX)" --target=$(TARGET) --disable-werror && \
 	$(MAKE) -j$(PROCS) && \
 	$(MAKE) installdirs install-host install-target && \
-	mkdir -p $(PREFIX)/man/man1 && \
-	cp ../../gdb-$(CS_BASE)/gdb/gdb.1 $(PREFIX)/man/man1/arm-none-eabi-gdb.1
+	mkdir -p "$(PREFIX)/man/man1" && \
+	cp ../../gdb-$(CS_BASE)/gdb/gdb.1 "$(PREFIX)/man/man1/arm-none-eabi-gdb.1"
 
 .PHONY : clean
 clean:
