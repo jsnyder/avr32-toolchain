@@ -54,19 +54,53 @@ Next build the toolchain:
 make install-cross
 ----
 
-his should build the compiler, newlib, gdb, etc.. and install them all
+You should be able to also specify a specific install/prefix location
+by building using the following type of invokation:
+
+----
+PREFIX=$HOME/avr32-tools make install-cross
+----
+
+If you do this, make sure you have permissions to create a directory
+at this location and/or to create directories within this location if
+the directory already exists.
+
+
+*NOTE:* If you're running Mac OS X Lion or XCode 4.1 you may find that
+ you're unable to bootstrap GCC. To work around this until the issue
+ is fixed in Apple's distribution of llvm-gcc, use the following
+ command instead of the above to build.
+
+----
+CC=gcc-4.2 make install-cross
+----
+
+
+
+This should build the compiler, newlib, gdb, etc.. and install them all
 into a directory called arm-cs-tools in your home directory. If you
 want to install to another location, feel free to change the export
 lines and to adjust the definitions at the top of the Makefile.
 
 Keep in mind that the Makefile does install at the end of each build.
 
-Once you’re done, you’ll likely want to add the path where the
-compiler was installed to to your .bash_profile, .zshrc, etc..:
+Once you’re done, the makefile should notify you of the install
+location, which will be based on the git revision if you cloned the
+repository or the current date if you grabbed a tarball and/or you
+don't have the git binary. The message should look like the following:
 
 ----
-export PATH=$HOME/avr32-tools/bin:$PATH
+====== INSTALLATION NOTE ======
+Your tools have now been installed at the following prefix:
+/Users/jsnyder/avr32-tools-bd2485b
+
+Please be sure to add something similar to the following to your .bash_profile, .zshrc, etc:
+export PATH=/Users/jsnyder/avr32-tools-bd2485b/bin:$PATH
 ----
+
+If it uses the date instead the the git short revision will bve
+replaced with a date number like: 20110726.
+
 
 === Special Thanks ===
 
