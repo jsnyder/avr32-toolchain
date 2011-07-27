@@ -20,10 +20,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+#### PRIMARY TOOLCHAIN VERSIONS #####
+
+GCC_VERSION      = 4.4.3
+GDB_VERSION      = 6.7.1
+BINUTILS_VERSION = 2.20.1
+NEWLIB_VERSION   = 1.16.0
+DFU_VERSION      = 0.5.4
+AVR_PATCH_REV	 = 3.2.0.233
+
+
+#### PATHS AND ENVIRONMENT VARIABLES #####
 
 SHELL       = /bin/bash
 TARGET      = avr32
-PREFIX      = $(HOME)/avr32-tools/
+GIT_REV	    = $(shell git rev-parse --verify HEAD --short)
+PREFIX     ?= $(HOME)/avr32-tools-$(GIT_REV)
 SUPP_PREFIX = $(CURDIR)/supp
 PROCS       = 5
 PATH       := ${PREFIX}/bin:${SUPP_PREFIX}/bin:${PATH}
@@ -31,14 +43,10 @@ AUTOCONF    = $(SUPP_PREFIX)/bin/autoconf
 AUTOMAKE    = $(SUPP_PREFIX)/bin/automake
 
 BUG_URL = https://github.com/jsnyder/avr32-toolchain
+PKG_VERSION = "AVR 32 bit GNU Toolchain-$(GCC_VERSION)-$(AVR_PATCH_REV)-$(GIT_REV)"
 
 
-#### PRIMARY TOOLCHAIN VERSIONS / URLS #####
-GCC_VERSION      = 4.4.3
-GDB_VERSION      = 6.7.1
-BINUTILS_VERSION = 2.20.1
-NEWLIB_VERSION   = 1.16.0
-DFU_VERSION      = 0.5.4
+#### PRIMARY TOOLCHAIN URLS #####
 
 GCC_ARCHIVE = gcc-$(GCC_VERSION).tar.bz2
 GCC_URL = http://mirror.anl.gov/pub/gnu/gcc/gcc-$(GCC_VERSION)/$(GCC_ARCHIVE)
@@ -56,7 +64,7 @@ NEWLIB_ARCHIVE = newlib-$(NEWLIB_VERSION).tar.gz
 NEWLIB_URL = ftp://sources.redhat.com/pub/newlib/$(NEWLIB_ARCHIVE)
 NEWLIB_MD5 = bf8f1f9e3ca83d732c00a79a6ef29bc4
 
-AVR32PATCHES_ARCHIVE = avr32-gnu-toolchain-3.2.0.233-source.zip
+AVR32PATCHES_ARCHIVE = avr32-gnu-toolchain-$(AVR_PATCH_REV)-source.zip
 AVR32PATCHES_URL = http://distribute.atmel.no/tools/opensource/as5-beta/$(AVR32PATCHES_ARCHIVE)
 AVR32PATCHES_MD5 = b009a7190071c7466ce14f8acb2796ae
 
@@ -82,7 +90,7 @@ AUTOMAKE_MD5 = 4db4efe027e26b33930a7e151de19d0f
 
 
 .PHONY: install-cross
-install-cross: stamps/install-binutils stamps/install-gcc stamps/install-newlib stamps/install-headers
+install-cross: stamps/install-binutils stamps/install-gcc stamps/install-g++ stamps/install-newlib stamps/install-headers
 install-deps: gmp mpfr mpc
 
 .PHONY: sudomode
@@ -92,9 +100,6 @@ ifneq ($(USER),root)
 	@echo e.g.: sudo make targetname
 	@exit 1
 endif
-
-
-
 
 
 .PHONY: download-gdb
@@ -260,11 +265,12 @@ build-newlib stamps/build-newlib: stamps/prep-newlib stamps/install-binutils sta
 	make clean ; \
 	popd ; \
 	../../newlib-$(NEWLIB_VERSION)/configure --prefix=$(PREFIX)	\
+	--with-build-time-tools=$(PREFIX)				\
 	--target=$(TARGET) --disable-newlib-supplied-syscalls		\
 	--disable-libgloss --disable-nls --disable-shared		\
 	--enable-newlib-io-long-long --enable-newlib-io-long-double	\
 	--enable-target-optspace --enable-newlib-io-pos-args		\
-	--enable-newlib-reent-small && \
+	--enable-newlib-reent-small  && \
 	$(MAKE) -j$(PROCS) CFLAGS_FOR_TARGET=$(NEWLIB_FLAGS) CCASFLAGS=$(NEWLIB_FLAGS) && \
 	[ -d stamps ] || mkdir stamps
 	touch stamps/build-newlib;
@@ -327,24 +333,21 @@ regen-binutils stamps/regen-binutils: stamps/patch-binutils stamps/install-supp-
 
 .PHONY: build-binutils
 build-binutils stamps/build-binutils: stamps/regen-binutils stamps/install-supp-tools
-	mkdir -p build/binutils && cd build/binutils && \
-	pushd ../../binutils-$(BINUTILS_VERSION) ; \
-	make clean ; \
-	popd ; \
-	../../binutils-$(BINUTILS_VERSION)/configure   --enable-maintainer-mode		\
+	cd binutils-$(BINUTILS_VERSION) ; \
+	./configure   --enable-maintainer-mode		\
 	--prefix="$(PREFIX)" --target=$(TARGET) --disable-nls		\
 	--disable-shared --disable-werror				\
 	--with-sysroot="$(PREFIX)/$(TARGET)" --with-bugurl=$(BUG_URL) &&	\
 	$(MAKE) maybe-configure-bfd; \
 	$(MAKE) -C bfd headers; \
 	$(MAKE) all-bfd TARGET-bfd=headers; \
-	$(MAKE) -j$(PROCS)
+	$(MAKE)
 	[ -d stamps ] || mkdir stamps ;
 	touch stamps/build-binutils;
 
 .PHONY: install-binutils
 install-binutils stamps/install-binutils: stamps/build-binutils
-	cd build/binutils && \
+	cd binutils-$(BINUTILS_VERSION) && \
 	$(MAKE) installdirs install-host install-target
 	[ -d stamps ] || mkdir stamps ;
 	touch stamps/install-binutils;
@@ -417,7 +420,7 @@ CFLAGS_FOR_TARGET="-ffunction-sections -fdata-sections			\
 -Os -fno-unroll-loops"
 
 .PHONY: build-gcc
-build-gcc stamps/build-gcc: stamps/install-binutils stamps/prep-newlib stamps/prep-gcc
+build-gcc stamps/build-gcc: stamps/install-binutils stamps/prep-gcc
 	mkdir -p build/gcc && cd build/gcc && \
 	pushd ../../gcc-$(GCC_VERSION) ; \
 	make clean ; \
@@ -425,7 +428,7 @@ build-gcc stamps/build-gcc: stamps/install-binutils stamps/prep-newlib stamps/pr
 	../../gcc-$(GCC_VERSION)/configure --prefix="$(PREFIX)"		\
 	--target=$(TARGET) --enable-languages="c" --with-gnu-ld		\
 	--with-gnu-as --with-newlib --disable-nls --disable-libssp	\
-	--with-newlib --with-dwarf2 --enable-sjlj-exceptions		\
+	--with-dwarf2 --enable-sjlj-exceptions				\
 	--enable-version-specific-runtime-libs --disable-libstdcxx-pch	\
 	--disable-shared						\
 	--with-build-time-tools="$(PREFIX)/$(TARGET)/bin"		\
@@ -436,7 +439,8 @@ build-gcc stamps/build-gcc: stamps/install-binutils stamps/prep-newlib stamps/pr
 	CFLAGS_FOR_TARGET=$(CFLAGS_FOR_TARGET)				\
 	LDFLAGS_FOR_TARGET="--sysroot=\"$(PREFIX)/$(TARGET)\""		\
 	CPPFLAGS_FOR_TARGET="--sysroot=\"$(PREFIX)/$(TARGET)\""		\
-	--with-bugurl=$(BUG_URL) && \
+	--with-bugurl=$(BUG_URL) \
+	--with-pkgversion=$(PKG_VERSION) && \
 	$(MAKE) -j$(PROCS)
 	[ -d stamps ] || mkdir stamps
 	touch stamps/build-gcc;
@@ -449,6 +453,47 @@ install-gcc stamps/install-gcc:  stamps/build-gcc
 	[ -d stamps ] || mkdir stamps
 	touch stamps/install-gcc;
 
+
+################ G++ ################
+
+.PHONY: prep-g++
+prep-g++ stamps/prep-g++: stamps/patch-gcc stamps/prep-gcc
+	[ -d stamps ] || mkdir stamps;
+	touch stamps/prep-g++;
+
+.PHONY: build-g++
+build-g++ stamps/build-g++: stamps/install-binutils stamps/install-gcc stamps/install-newlib stamps/prep-g++
+	mkdir -p build/g++ && cd build/g++ && \
+	pushd ../../gcc-$(GCC_VERSION) ; \
+	make clean ; \
+	popd ; \
+	../../gcc-$(GCC_VERSION)/configure --prefix=$(PREFIX) \
+	--target=$(TARGET) $(DEPENDENCIES) --enable-languages="c++" --with-gnu-ld \
+	--with-gnu-as --with-newlib --disable-nls --disable-libssp \
+	--with-dwarf2 --enable-sjlj-exceptions \
+	--enable-version-specific-runtime-libs --disable-libstdcxx-pch \
+	--disable-shared --enable-__cxa_atexit \
+	--with-build-time-tools=$(PREFIX)/$(TARGET)/bin \
+	--enable-cxx-flags=$(CFLAGS_FOR_TARGET) \
+	--with-sysroot=$(PREFIX)/$(TARGET) \
+	--with-build-sysroot=$(PREFIX)/$(TARGET) \
+	--with-build-time-tools=$(PREFIX)/$(TARGET)/bin \
+	CFLAGS_FOR_TARGET=$(CFLAGS_FOR_TARGET) \
+	LDFLAGS_FOR_TARGET="--sysroot=$(PREFIX)/$(TARGET)" \
+	CPPFLAGS_FOR_TARGET="--sysroot=$(PREFIX)/$(TARGET)" \
+	--with-bugurl=$(BUG_URL) \
+	--with-pkgversion=$(PKG_VERSION) && \
+	$(MAKE) -j$(PROCS)
+	[ -d stamps ] || mkdir stamps
+	touch stamps/build-g++;
+
+.PHONY: install-g++
+install-g++ stamps/install-g++: stamps/build-g++
+	cd build/g++ && \
+	$(MAKE) installdirs install-target && \
+	$(MAKE) -C gcc install-common install-cpp install- install-driver install-headers install-man
+	[ -d stamps ] || mkdir stamps
+	touch stamps/install-g++;
 
 
 ################ NON-WORKING/NON-ADJUSTED TARGETS ################
@@ -492,21 +537,6 @@ mpfr: gmp mpfr-$(CS_BASE)/ sudomode
 	sudo -u $(SUDO_USER) ../../mpfr-$(CS_BASE)/configure LDFLAGS="-Wl,-search_paths_first" --disable-shared && \
 	sudo -u $(SUDO_USER) $(MAKE) -j$(PROCS) all && \
 	$(MAKE) install
-
-
-cross-g++: cross-binutils cross-gcc cross-newlib gcc-$(GCC_VERSION)-$(CS_BASE)/ gcc-optsize-patch
-	mkdir -p build/g++ && cd build/g++ && \
-	../../gcc-$(GCC_VERSION)-$(CS_BASE)/configure --prefix="$(PREFIX)" --target="$(TARGET)" \
-	--enable-languages="c++" --with-gnu-ld --with-gnu-as --with-newlib --disable-nls \
-	--disable-libssp --with-newlib --without-headers --disable-shared \
-	--disable-threads --disable-libmudflap --disable-libgomp --disable-libstdcxx-pch \
-	--disable-libunwind-exceptions --disable-libffi --enable-extra-sgxxlite-multilibs \
-	--enable-libstdcxx-allocator=malloc \
-	--enable-cxx-flags=$(CFLAGS_FOR_TARGET) \
-	CFLAGS_FOR_TARGET=$(CFLAGS_FOR_TARGET) && \
-	$(MAKE) -j$(PROCS) && \
-	$(MAKE) installdirs install-target && \
-	$(MAKE) -C gcc install-common install-cpp install- install-driver install-headers install-man
 
 cross-gdb: gdb-$(CS_BASE)/
 	mkdir -p build/gdb && cd build/gdb && \
