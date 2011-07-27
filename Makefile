@@ -34,8 +34,16 @@ AVR_PATCH_REV	 = 3.2.0.233
 
 SHELL       = /bin/bash
 TARGET      = avr32
+
+TODAY = $(shell date "+%Y%m%d")
 GIT_REV	    = $(shell git rev-parse --verify HEAD --short)
+
+ifeq ($(strip $(GIT_REV)),)
+PREFIX     ?= $(HOME)/avr32-tools-$(TODAY)
+else
 PREFIX     ?= $(HOME)/avr32-tools-$(GIT_REV)
+endif
+
 SUPP_PREFIX = $(CURDIR)/supp
 PROCS       = 5
 PATH       := ${PREFIX}/bin:${SUPP_PREFIX}/bin:${PATH}
@@ -88,10 +96,12 @@ AUTOMAKE_MD5 = 4db4efe027e26b33930a7e151de19d0f
 
 
 
+.PHONY: install-tools
+install-tools: stamps/install-binutils stamps/install-gcc stamps/install-g++ stamps/install-newlib stamps/install-headers
 
 .PHONY: install-cross
-install-cross: stamps/install-binutils stamps/install-gcc stamps/install-g++ stamps/install-newlib stamps/install-headers
-install-deps: gmp mpfr mpc
+install-cross: install-tools install-note
+
 
 .PHONY: sudomode
 sudomode:
@@ -100,6 +110,21 @@ ifneq ($(USER),root)
 	@echo e.g.: sudo make targetname
 	@exit 1
 endif
+
+
+.PHONY: tst
+tst:
+	@echo $(PREFIX)
+
+.PHONY: install-note
+install-note: install-tools
+	@echo
+	@echo ====== INSTALLATION NOTE ======
+	@echo Your tools have now been installed at the following prefix:
+	@echo $(PREFIX)
+	@echo
+	@echo Please be sure to add something similar to the following to your .bash_profile, .zshrc, etc:
+	@echo export PATH=$(PREFIX)/bin:'$$PATH'
 
 
 .PHONY: download-gdb
