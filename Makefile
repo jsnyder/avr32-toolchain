@@ -27,7 +27,7 @@ GDB_VERSION      = 6.7.1
 BINUTILS_VERSION = 2.20.1
 NEWLIB_VERSION   = 1.16.0
 DFU_VERSION      = 0.5.4
-AVR_PATCH_REV	 = 3.2.0.233
+AVR_PATCH_REV	 = 3.2.3.261
 
 
 #### PATHS AND ENVIRONMENT VARIABLES #####
@@ -73,8 +73,8 @@ NEWLIB_URL = ftp://sources.redhat.com/pub/newlib/$(NEWLIB_ARCHIVE)
 NEWLIB_MD5 = bf8f1f9e3ca83d732c00a79a6ef29bc4
 
 AVR32PATCHES_ARCHIVE = avr32-gnu-toolchain-$(AVR_PATCH_REV)-source.zip
-AVR32PATCHES_URL = http://distribute.atmel.no/tools/opensource/as5-beta/$(AVR32PATCHES_ARCHIVE)
-AVR32PATCHES_MD5 = b009a7190071c7466ce14f8acb2796ae
+AVR32PATCHES_URL=http://www.atmel.com/dyn/resources/prod_documents/$(AVR32PATCHES_ARCHIVE)
+AVR32PATCHES_MD5 = 69a03828a328068f25d457cfd8341857
 
 DFU_ARCHIVE = dfu-programmer-$(DFU_VERSION).tar.gz
 DFU_URL = http://surfnet.dl.sourceforge.net/project/dfu-programmer/dfu-programmer/$(DFU_VERSION)/$(DFU_ARCHIVE)
