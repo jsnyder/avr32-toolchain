@@ -151,7 +151,7 @@ downloads/$(AUTOCONF_ARCHIVE) download-autoconf:
 .PHONY: extract-autoconf
 extract-autoconf stamps/extract-autoconf: downloads/$(AUTOCONF_ARCHIVE)
 	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
-	test $$t1=$(AUTOCONF_MD5) || \
+	[ "$$t1" = "$(AUTOCONF_MD5)" ] || \
 	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
 	tar -jxf $< ;
 	[ -d stamps ] || mkdir stamps ;
@@ -184,7 +184,7 @@ downloads/$(AUTOMAKE_ARCHIVE) download-automake:
 .PHONY: extract-automake
 extract-automake stamps/extract-automake: downloads/$(AUTOMAKE_ARCHIVE)
 	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
-	test $$t1=$(AUTOMAKE_MD5) || \
+	[ "$$t1" = "$(AUTOMAKE_MD5)" ] || \
 	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
 	tar -jxf $< ;
 	[ -d stamps ] || mkdir stamps ;
@@ -216,7 +216,7 @@ downloads/$(AVR32PATCHES_ARCHIVE) download-avr32patches:
 .PHONY: extract-avr32patches
 extract-avr32patches stamps/extract-avr32patches : downloads/$(AVR32PATCHES_ARCHIVE)
 	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
-	test $$t1=$(AVR32PATCHES_MD5) || \
+	[ "$$t1" = "$(AVR32PATCHES_MD5)" ] || \
 	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
 	unzip -o $<
 	[ -d stamps ] || mkdir stamps
@@ -247,7 +247,7 @@ prep-newlib stamps/prep-newlib: stamps/regen-newlib
 .PHONY: extract-newlib
 extract-newlib stamps/extract-newlib : downloads/$(NEWLIB_ARCHIVE)
 	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
-	test $$t1=$(NEWLIB_MD5) || \
+	[ "$$t1" = "$(NEWLIB_MD5)" ] || \
 	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
 	tar -xf $<
 	[ -d stamps ] || mkdir stamps
@@ -322,7 +322,7 @@ prep-binutils stamps/prep-binutils: stamps/regen-binutils
 .PHONY: extract-binutils
 extract-binutils stamps/extract-binutils: downloads/$(BINUTILS_ARCHIVE)
 	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
-	test $$t1=$(BINUTILS_MD5) || \
+	[ "$$t1" = "$(BINUTILS_MD5)" ] || \
 	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
 	tar -jxf $< ;
 	[ -d stamps ] || mkdir stamps ;
@@ -387,7 +387,7 @@ downloads/$(DFU_ARCHIVE) download-dfu:
 .PHONY: extract-dfu
 extract-dfu stamps/extract-dfu: downloads/$(DFU_ARCHIVE)
 	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
-	test $$t1=$(DFU_MD5) || \
+	[ "$$t1" = "$(DFU_MD5)" ] || \
 	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
 	tar -jxf $< ;
 	[ -d stamps ] || mkdir stamps ;
@@ -424,7 +424,7 @@ prep-gcc stamps/prep-gcc: stamps/patch-gcc
 .PHONY: extract-gcc
 extract-gcc stamps/extract-gcc: downloads/$(GCC_ARCHIVE)
 	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
-	test $$t1=$(GCC_MD5) || \
+	[ "$$t1" = "$(GCC_MD5)" ] || \
 	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
 	tar -jxf $< ;
 	[ -d stamps ] || mkdir stamps ;
