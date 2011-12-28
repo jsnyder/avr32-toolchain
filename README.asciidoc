@@ -23,8 +23,8 @@ installing the Apple
 link:http://developer.apple.com/technologies/tools/[Developer Tools].
 You should be able to download free versions of 3.x from the ADC
 website, install from the OS X install disc that came with your
-machine, or purchase XCode 4 for US$4.99 from the App Store (free if
-you're a member of the Mac or iOS developer program).
+machine, or download XCode 4 from the App Store (now free again for
+all registered users).
 
 You will also need gmp, mpfr and mpc first.  I recommend installing
 these from link:https://github.com/mxcl/homebrew[homebrew] for now.

@@ -45,13 +45,13 @@ PREFIX     ?= $(HOME)/avr32-tools-$(GIT_REV)
 endif
 
 SUPP_PREFIX = $(CURDIR)/supp
-PROCS       = 5
+PROCS       = 1
 PATH       := ${PREFIX}/bin:${SUPP_PREFIX}/bin:${PATH}
 AUTOCONF    = $(SUPP_PREFIX)/bin/autoconf
 AUTOMAKE    = $(SUPP_PREFIX)/bin/automake
 
 BUG_URL = https://github.com/jsnyder/avr32-toolchain
-PKG_VERSION = "AVR 32 bit GNU Toolchain-$(GCC_VERSION)-$(AVR_PATCH_REV)-$(GIT_REV)"
+PKG_VERSION = "AVR 32 bit GNU Toolchain-$(AVR_PATCH_REV)-$(GIT_REV)"
 
 
 #### PRIMARY TOOLCHAIN URLS #####
