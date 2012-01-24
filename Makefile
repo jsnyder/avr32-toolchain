@@ -242,7 +242,7 @@ downloads/$(AVR32HEADERS_ARCHIVE) download-avr32headers:
 	cd downloads && curl -LO $(AVR32HEADERS_URL)
 
 .PHONY: install-headers
-install-headers stamps/install-headers : downloads/$(AVR32HEADERS_ARCHIVE)
+install-headers stamps/install-headers : downloads/$(AVR32HEADERS_ARCHIVE) stamps/install-final-gcc
 	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
 	[ "$$t1" = "$(AVR32HEADERS_MD5)" ] || \
 	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
