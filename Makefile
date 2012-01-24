@@ -28,6 +28,7 @@ BINUTILS_VERSION = 2.20.1
 NEWLIB_VERSION   = 1.16.0
 DFU_VERSION      = 0.5.4
 AVR_PATCH_REV	 = 3.2.3.261
+AVR_HEADER_REV   = 3.2.3.258
 
 
 #### PATHS AND ENVIRONMENT VARIABLES #####
@@ -44,8 +45,15 @@ else
 PREFIX     ?= $(HOME)/avr32-tools-$(GIT_REV)
 endif
 
+ifeq ($(UNAME), Linux)
+PROCS  ?= $(shell grep -c ^processor /proc/cpuinfo)
+else ifeq ($(UNAME), Darwin)
+PROCS  ?= $(shell sysctl hw.ncpu | awk '{print $$2}')
+else
+PROCS  ?= 2
+endif
+
 SUPP_PREFIX = $(CURDIR)/supp
-PROCS       = 1
 PATH       := ${PREFIX}/bin:${SUPP_PREFIX}/bin:${PATH}
 AUTOCONF    = $(SUPP_PREFIX)/bin/autoconf
 AUTOMAKE    = $(SUPP_PREFIX)/bin/automake
@@ -76,6 +84,10 @@ AVR32PATCHES_ARCHIVE = avr32-gnu-toolchain-$(AVR_PATCH_REV)-source.zip
 AVR32PATCHES_URL=http://www.atmel.com/dyn/resources/prod_documents/$(AVR32PATCHES_ARCHIVE)
 AVR32PATCHES_MD5 = 69a03828a328068f25d457cfd8341857
 
+AVR32HEADERS_ARCHIVE = avr32-headers-$(AVR_HEADER_REV).zip
+AVR32HEADERS_URL=http://www.atmel.com/dyn/resources/prod_documents/$(AVR32HEADERS_ARCHIVE)
+AVR32HEADERS_MD5 = 3293d70a46e460d342e1f939b8e0d228
+
 DFU_ARCHIVE = dfu-programmer-$(DFU_VERSION).tar.gz
 DFU_URL = http://surfnet.dl.sourceforge.net/project/dfu-programmer/dfu-programmer/$(DFU_VERSION)/$(DFU_ARCHIVE)
 DFU_MD5 = 707dcd0f957a74e92456ea6919faa772
@@ -97,7 +109,7 @@ AUTOMAKE_MD5 = 4db4efe027e26b33930a7e151de19d0f
 
 
 .PHONY: install-tools
-install-tools: stamps/install-binutils stamps/install-gcc stamps/install-g++ stamps/install-newlib stamps/install-headers
+install-tools: stamps/install-binutils stamps/install-final-gcc stamps/install-newlib stamps/install-headers
 
 .PHONY: install-cross
 install-cross: install-tools install-note
@@ -225,10 +237,18 @@ extract-avr32patches stamps/extract-avr32patches : downloads/$(AVR32PATCHES_ARCH
 
 ############# AVR32 HEADERS ############
 
+.PHONY: download-avr32headers
+downloads/$(AVR32HEADERS_ARCHIVE) download-avr32headers:
+	cd downloads && curl -LO $(AVR32HEADERS_URL)
+
 .PHONY: install-headers
-install-headers stamps/install-headers: stamps/install-gcc
-	mkdir -p  "$(PREFIX)/$(TARGET)/include/avr32" && \
-	cp -f avr32-headers/* "$(PREFIX)/$(TARGET)/include/avr32/"
+install-headers stamps/install-headers : downloads/$(AVR32HEADERS_ARCHIVE)
+	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
+	[ "$$t1" = "$(AVR32HEADERS_MD5)" ] || \
+	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
+	unzip -o $< -d "$(PREFIX)/$(TARGET)/include/" && \
+	[ -d stamps ] || mkdir stamps
+	touch stamps/install-headers;
 
 
 ################ NEWLIB ################
@@ -363,9 +383,9 @@ build-binutils stamps/build-binutils: stamps/regen-binutils stamps/install-supp-
 	--prefix="$(PREFIX)" --target=$(TARGET) --disable-nls		\
 	--disable-shared --disable-werror				\
 	--with-sysroot="$(PREFIX)/$(TARGET)" --with-bugurl=$(BUG_URL) &&	\
-	$(MAKE) maybe-configure-bfd; \
-	$(MAKE) -C bfd headers; \
 	$(MAKE) all-bfd TARGET-bfd=headers; \
+	rm bfd/Makefile; \
+	make configure-bfd; \
 	$(MAKE)
 	[ -d stamps ] || mkdir stamps ;
 	touch stamps/build-binutils;
@@ -409,7 +429,7 @@ install-dfu stamps/install-dfu:  stamps/build-dfu
 	touch stamps/install-dfu;
 
 
-################ GCC ################
+################ Bootstrap GCC ################
 
 .PHONY: download-gcc
 downloads/$(GCC_ARCHIVE) download-gcc:
@@ -479,21 +499,21 @@ install-gcc stamps/install-gcc:  stamps/build-gcc
 	touch stamps/install-gcc;
 
 
-################ G++ ################
+################ Final GCC ################
 
-.PHONY: prep-g++
-prep-g++ stamps/prep-g++: stamps/patch-gcc stamps/prep-gcc
+.PHONY: prep-final-gcc
+prep-final-gcc stamps/prep-final-gcc: stamps/patch-gcc stamps/prep-gcc
 	[ -d stamps ] || mkdir stamps;
-	touch stamps/prep-g++;
+	touch stamps/prep-final-gcc;
 
-.PHONY: build-g++
-build-g++ stamps/build-g++: stamps/install-binutils stamps/install-gcc stamps/install-newlib stamps/prep-g++
-	mkdir -p build/g++ && cd build/g++ && \
+.PHONY: build-final-gcc
+build-final-gcc stamps/build-final-gcc: stamps/install-binutils stamps/install-gcc stamps/install-newlib stamps/prep-final-gcc
+	mkdir -p build/final-gcc && cd build/final-gcc && \
 	pushd ../../gcc-$(GCC_VERSION) ; \
 	make clean ; \
 	popd ; \
 	../../gcc-$(GCC_VERSION)/configure --prefix=$(PREFIX) \
-	--target=$(TARGET) $(DEPENDENCIES) --enable-languages="c++" --with-gnu-ld \
+	--target=$(TARGET) $(DEPENDENCIES) --enable-languages="c,c++" --with-gnu-ld \
 	--with-gnu-as --with-newlib --disable-nls --disable-libssp \
 	--with-dwarf2 --enable-sjlj-exceptions \
 	--enable-version-specific-runtime-libs --disable-libstdcxx-pch \
@@ -510,15 +530,15 @@ build-g++ stamps/build-g++: stamps/install-binutils stamps/install-gcc stamps/in
 	--with-pkgversion=$(PKG_VERSION) && \
 	$(MAKE) -j$(PROCS)
 	[ -d stamps ] || mkdir stamps
-	touch stamps/build-g++;
+	touch stamps/build-final-gcc;
 
-.PHONY: install-g++
-install-g++ stamps/install-g++: stamps/build-g++
-	cd build/g++ && \
+.PHONY: install-final-gcc
+install-final-gcc stamps/install-final-gcc: stamps/build-final-gcc
+	cd build/final-gcc && \
 	$(MAKE) installdirs install-target && \
 	$(MAKE) -C gcc install-common install-cpp install- install-driver install-headers install-man
 	[ -d stamps ] || mkdir stamps
-	touch stamps/install-g++;
+	touch stamps/install-final-gcc;
 
 
 ################ NON-WORKING/NON-ADJUSTED TARGETS ################
