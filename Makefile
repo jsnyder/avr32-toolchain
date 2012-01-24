@@ -24,7 +24,7 @@
 
 GCC_VERSION      = 4.4.3
 GDB_VERSION      = 6.7.1
-BINUTILS_VERSION = 2.20.1
+BINUTILS_VERSION = 2.20.1a
 NEWLIB_VERSION   = 1.16.0
 DFU_VERSION      = 0.5.4
 AVR_PATCH_REV	 = 3.2.3.261
@@ -66,7 +66,7 @@ GDB_MD5 = 30a6bf36eded4ae5a152d7d71b86dc14
 
 BINUTILS_ARCHIVE = binutils-$(BINUTILS_VERSION).tar.bz2
 BINUTILS_URL = http://mirror.anl.gov/pub/gnu/binutils/$(BINUTILS_ARCHIVE)
-BINUTILS_MD5 = 9cdfb9d6ec0578c166d3beae5e15c4e5
+BINUTILS_MD5 = 2b9dc8f2b7dbd5ec5992c6e29de0b764
 
 NEWLIB_ARCHIVE = newlib-$(NEWLIB_VERSION).tar.gz
 NEWLIB_URL = ftp://sources.redhat.com/pub/newlib/$(NEWLIB_ARCHIVE)
