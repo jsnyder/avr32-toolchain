@@ -36,6 +36,12 @@ With homebrew you can install those dependencies like this:
 brew install mpfr gmp libmpc texinfo
 ----
 
+If you would like to build dfu-programmer, also install libusb:
+
+----
+brew install libusb-compat
+----
+
 
 === Requirements (Ubuntu) ===
 
@@ -44,6 +50,12 @@ following packages have been installed prior to attempting the build:
 
 ----
 sudo apt-get install curl flex bison libgmp3-dev libmpfr-dev autoconf build-essential libncurses5-dev libmpc-dev texinfo
+----
+
+If you would like to build dfu-programmer, also install libusb:
+
+----
+sudo apt-get install libusb-dev
 ----
 
 === Main Build Instructions ===
@@ -101,6 +113,12 @@ export PATH=/Users/jsnyder/avr32-tools-bd2485b/bin:$PATH
 If it uses the date instead the the git short revision will bve
 replaced with a date number like: 20110726.
 
+If you also would like dfu-programmer installed intalled (make sure
+you have previously installed libusb as described in requirements):
+
+----
+make install-dfu
+----
 
 === Special Thanks ===
 
