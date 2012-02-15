@@ -409,7 +409,7 @@ extract-dfu stamps/extract-dfu: downloads/$(DFU_ARCHIVE)
 	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
 	[ "$$t1" = "$(DFU_MD5)" ] || \
 	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
-	tar -jxf $< ;
+	tar -zxf $< ;
 	[ -d stamps ] || mkdir stamps ;
 	touch stamps/extract-dfu;
 
