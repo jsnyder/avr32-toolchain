@@ -82,7 +82,7 @@ NEWLIB_MD5 = bf8f1f9e3ca83d732c00a79a6ef29bc4
 
 AVR32PATCHES_ARCHIVE = avr32-gnu-toolchain-$(AVR_PATCH_REV)-source.zip
 AVR32PATCHES_URL=http://www.atmel.com/dyn/resources/prod_documents/$(AVR32PATCHES_ARCHIVE)
-AVR32PATCHES_MD5 = 69a03828a328068f25d457cfd8341857
+AVR32PATCHES_MD5 = 68fe4f7a4b8f19183a3be0ce84a75425
 
 AVR32HEADERS_ARCHIVE = avr32-headers-$(AVR_HEADER_REV).zip
 AVR32HEADERS_URL=http://www.atmel.com/dyn/resources/prod_documents/$(AVR32HEADERS_ARCHIVE)
