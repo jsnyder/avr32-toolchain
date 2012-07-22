@@ -255,7 +255,7 @@ extract-headers stamps/extract-headers : downloads/$(AVR32HEADERS_ARCHIVE)
 
 .PHONY: install-headers
 install-headers stamps/install-headers : stamps/extract-headers stamps/install-final-gcc
-	cp -r avr-headers/* $(PREFIX)/$(TARGET)/include/
+	cp -r avr-headers/$(TARGET) $(PREFIX)/$(TARGET)/include/$(TARGET)
 	mkdir -p stamps
 	touch stamps/install-headers
 
@@ -605,4 +605,4 @@ cross-gdb: gdb-$(CS_BASE)/
 
 .PHONY : clean
 clean:
-	rm -rf build *-$(CS_BASE) binutils-* gcc-* gdb-* newlib-* mpc-* $(LOCAL_BASE) dfu-programmer-* autoconf-* automake-* stamps/* source supp
+	rm -rf build *-$(CS_BASE) binutils-* gcc-* gdb-* newlib-* mpc-* $(LOCAL_BASE) dfu-programmer-* autoconf-* automake-* stamps source supp avr-headers
