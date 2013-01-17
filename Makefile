@@ -465,6 +465,7 @@ patch-gcc stamps/patch-gcc: stamps/extract-gcc stamps/extract-avr32patches
 	for f in ../source/avr32/gcc/*.patch; do \
 	patch -N -p0 <$${f} ; \
 	done ; \
+	patch -N -p0 <../patches/gcc/00-libstdc++-shared_ptr-without-rtti-bug-42019.patch ; \
 	popd ;
 	[ -d stamps ] || mkdir stamps
 	touch stamps/patch-gcc;
