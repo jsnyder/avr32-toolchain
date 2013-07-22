@@ -1,6 +1,6 @@
 diff -ru libstdc++-v3.old/include/bits/shared_ptr.h libstdc++-v3/include/bits/shared_ptr.h
---- libstdc++-v3.old/include/bits/shared_ptr.h	2013-01-17 13:14:29.000000000 +0100
-+++ libstdc++-v3/include/bits/shared_ptr.h	2013-01-17 13:14:35.000000000 +0100
+--- libstdc++-v3.old/include/bits/shared_ptr.h	2013-07-19 21:25:41.310178557 +0200
++++ libstdc++-v3/include/bits/shared_ptr.h	2013-07-19 20:57:03.254130628 +0200
 @@ -143,7 +143,13 @@
        
        virtual void*
@@ -38,15 +38,47 @@ diff -ru libstdc++-v3.old/include/bits/shared_ptr.h libstdc++-v3/include/bits/sh
        // This constructor is non-standard, it is used by allocate_shared.
        template<typename _Alloc, typename... _Args>
          __shared_ptr(_Sp_make_shared_tag __tag, _Alloc __a, _Args&&... __args)
-@@ -862,6 +873,7 @@
+@@ -862,6 +873,39 @@
            _M_ptr = static_cast<_Tp*>(__p);
  	  __enable_shared_from_this_helper(_M_refcount, _M_ptr, _M_ptr);
          }
++#else
++      template<typename _Alloc>
++        struct _Deleter
++        {
++          void operator()(_Tp* __ptr)
++          {
++            _M_alloc.destroy(__ptr);
++            _M_alloc.deallocate(__ptr, 1);
++          }
++          _Alloc _M_alloc;
++        };
++
++      template<typename _Alloc, typename... _Args>
++       __shared_ptr(_Sp_make_shared_tag __tag, _Alloc __a, _Args&&... __args)
++       : _M_ptr(), _M_refcount()
++        {
++         typedef typename _Alloc::template rebind<_Tp>::other _Alloc2;
++          _Deleter<_Alloc2> __del = { _Alloc2(__a) };
++          _M_ptr = __del._M_alloc.allocate(1);
++         __try
++           {
++              __del._M_alloc.construct(_M_ptr, std::forward<_Args>(__args)...);
++           }
++         __catch(...)
++           {
++              __del._M_alloc.deallocate(_M_ptr, 1);
++             __throw_exception_again;
++           }
++          __shared_count<_Lp> __count(_M_ptr, __del, __del._M_alloc);
++          _M_refcount._M_swap(__count);
++         __enable_shared_from_this_helper(_M_refcount, _M_ptr, _M_ptr);
++        }
 +#endif
  
        template<typename _Tp1, _Lock_policy _Lp1, typename _Alloc,
                 typename... _Args>
-@@ -1002,7 +1014,13 @@
+@@ -1002,7 +1046,13 @@
    template<typename _Del, typename _Tp, _Lock_policy _Lp>
      inline _Del*
      get_deleter(const __shared_ptr<_Tp, _Lp>& __p)
@@ -62,8 +94,8 @@ diff -ru libstdc++-v3.old/include/bits/shared_ptr.h libstdc++-v3/include/bits/sh
  
    template<typename _Tp, _Lock_policy _Lp>
 diff -ru libstdc++-v3.old/include/tr1/shared_ptr.h libstdc++-v3/include/tr1/shared_ptr.h
---- libstdc++-v3.old/include/tr1/shared_ptr.h	2013-01-17 13:14:30.000000000 +0100
-+++ libstdc++-v3/include/tr1/shared_ptr.h	2013-01-17 13:14:48.000000000 +0100
+--- libstdc++-v3.old/include/tr1/shared_ptr.h	2013-07-19 21:25:41.314178556 +0200
++++ libstdc++-v3/include/tr1/shared_ptr.h	2013-07-19 20:55:38.470128266 +0200
 @@ -76,7 +76,13 @@
        
        virtual void*
