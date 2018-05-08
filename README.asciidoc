@@ -49,7 +49,7 @@ These instructions should now also work on Ubuntu Linux, provided the
 following packages have been installed prior to attempting the build:
 
 ----
-sudo apt-get install curl flex bison libgmp3-dev libmpfr-dev autoconf build-essential libncurses5-dev libmpc-dev texinfo
+sudo apt-get install curl flex bison libgmp3-dev libmpfr-dev autoconf build-essential libncurses5-dev libmpc-dev unzip git
 ----
 
 If you would like to build dfu-programmer, also install libusb:

@@ -64,11 +64,11 @@ PKG_VERSION = "AVR 32 bit GNU Toolchain-$(AVR_PATCH_REV)-$(GIT_REV)"
 #### PRIMARY TOOLCHAIN URLS #####
 
 GCC_ARCHIVE = gcc-$(GCC_VERSION).tar.bz2
-GCC_URL = http://mirror.anl.gov/pub/gnu/gcc/gcc-$(GCC_VERSION)/$(GCC_ARCHIVE)
+GCC_URL = https://ftpmirror.gnu.org/gcc/gcc-$(GCC_VERSION)/$(GCC_ARCHIVE)
 GCC_MD5 = 295709feb4441b04e87dea3f1bab4281
 
 BINUTILS_ARCHIVE = binutils-$(BINUTILS_VERSION).tar.bz2
-BINUTILS_URL = http://mirror.anl.gov/pub/gnu/binutils/$(BINUTILS_ARCHIVE)
+BINUTILS_URL = https://ftpmirror.gnu.org/binutils/$(BINUTILS_ARCHIVE)
 BINUTILS_MD5 = 33adb18c3048d057ac58d07a3f1adb38
 
 NEWLIB_ARCHIVE = newlib-$(NEWLIB_VERSION).tar.gz
@@ -76,7 +76,7 @@ NEWLIB_URL = ftp://sources.redhat.com/pub/newlib/$(NEWLIB_ARCHIVE)
 NEWLIB_MD5 = bf8f1f9e3ca83d732c00a79a6ef29bc4
 
 AVR32PATCHES_ARCHIVE = avr32-patches.tar.gz
-AVR32PATCHES_URL = http://distribute.atmel.no/tools/opensource/Atmel-AVR-Toolchain-$(AVR32_PATCH_REV)/avr32/$(AVR32PATCHES_ARCHIVE)
+AVR32PATCHES_URL = http://distribute.atmel.no/tools/opensource/Atmel-AVR32-GNU-Toolchain/$(AVR32_PATCH_REV)/$(AVR32PATCHES_ARCHIVE)
 AVR32PATCHES_MD5 = 99b2f4497d264c9200538bb1229fdef9
 
 AVR32HEADERS_ARCHIVE = atmel-headers-$(ATMEL_HEADER_REV).zip
@@ -92,16 +92,19 @@ DFU_MD5 = 707dcd0f957a74e92456ea6919faa772
 AUTOCONF_VERSION = 2.64
 AUTOMAKE_VERSION = 1.11
 MPC_VERSION = 0.8.1
+TEXINFO_VERSION = 4.13
 
 AUTOCONF_ARCHIVE = autoconf-$(AUTOCONF_VERSION).tar.bz2
-AUTOCONF_URL = http://mirror.anl.gov/pub/gnu/autoconf/$(AUTOCONF_ARCHIVE)
+AUTOCONF_URL = https://ftpmirror.gnu.org/autoconf/$(AUTOCONF_ARCHIVE)
 AUTOCONF_MD5 = ef400d672005e0be21e0d20648169074
 
 AUTOMAKE_ARCHIVE = automake-$(AUTOMAKE_VERSION).tar.bz2
-AUTOMAKE_URL = http://mirror.anl.gov/pub/gnu/automake/$(AUTOMAKE_ARCHIVE)
+AUTOMAKE_URL = https://ftpmirror.gnu.org/automake/$(AUTOMAKE_ARCHIVE)
 AUTOMAKE_MD5 = 4db4efe027e26b33930a7e151de19d0f
 
-
+TEXINFO_ARCHIVE = texinfo-$(TEXINFO_VERSION)a.tar.gz
+TEXINFO_URL = https://ftpmirror.gnu.org/texinfo/$(TEXINFO_ARCHIVE)
+TEXINFO_MD5 = 71ba711519209b5fb583fed2b3d86fcb
 
 .PHONY: install-tools
 install-tools: stamps/install-binutils stamps/install-final-gcc stamps/install-newlib stamps/install-headers
@@ -137,7 +140,7 @@ install-note: install-tools
 
 
 .PHONY: install-supp-tools
-install-supp-tools stamps/install-supp-tools: install-autoconf install-automake
+install-supp-tools stamps/install-supp-tools: install-autoconf install-automake install-texinfo
 	[ -d stamps ] || mkdir stamps ;
 	touch stamps/install-supp-tools;
 
@@ -205,6 +208,38 @@ install-automake stamps/install-automake:  stamps/build-automake
 	$(MAKE) install
 	[ -d stamps ] || mkdir stamps
 	touch stamps/install-automake;
+
+
+############ SUPP: TEXINFO ############
+
+.PHONY: download-texinfo
+downloads/$(TEXINFO_ARCHIVE) download-texinfo:
+	[ -d downloads ] || mkdir downloads ;
+	cd downloads && curl -LO $(TEXINFO_URL)
+
+.PHONY: extract-texinfo
+extract-texinfo stamps/extract-texinfo: downloads/$(TEXINFO_ARCHIVE)
+	@(t1=`openssl md5 $< | cut -f 2 -d " " -` && \
+	[ "$$t1" = "$(TEXINFO_MD5)" ] || \
+	( echo "Bad Checksum! Please remove the following file and retry: $<" && false ))
+	tar -zxf $< ;
+	[ -d stamps ] || mkdir stamps ;
+	touch stamps/extract-texinfo;
+
+.PHONY: build-texinfo
+build-texinfo stamps/build-texinfo: stamps/extract-texinfo stamps/install-autoconf
+	mkdir -p build/texinfo && cd build/texinfo && \
+	../../texinfo-$(TEXINFO_VERSION)/configure --prefix="$(SUPP_PREFIX)" && \
+	$(MAKE) -j$(PROCS)
+	[ -d stamps ] || mkdir stamps
+	touch stamps/build-texinfo;
+
+.PHONY: install-texinfo
+install-texinfo stamps/install-texinfo:  stamps/build-texinfo
+	cd build/texinfo && \
+	$(MAKE) install
+	[ -d stamps ] || mkdir stamps
+	touch stamps/install-texinfo;
 
 
 
@@ -460,13 +495,15 @@ CFLAGS_FOR_TARGET="-ffunction-sections -fdata-sections			\
 -fomit-frame-pointer -DPREFER_SIZE_OVER_SPEED -D__OPTIMIZE_SIZE__ -g	\
 -Os -fno-unroll-loops"
 
+CFLAGS="-O2 -g -fgnu89-inline"
+
 .PHONY: build-gcc
 build-gcc stamps/build-gcc: stamps/install-binutils stamps/prep-gcc
 	mkdir -p build/gcc && cd build/gcc && \
 	pushd ../../gcc-$(GCC_VERSION) ; \
 	make clean ; \
 	popd ; \
-	../../gcc-$(GCC_VERSION)/configure --prefix="$(PREFIX)"		\
+	CFLAGS=$(CFLAGS) ../../gcc-$(GCC_VERSION)/configure --prefix="$(PREFIX)"		\
 	--target=$(TARGET) --enable-languages="c" --with-gnu-ld		\
 	--with-gnu-as --with-newlib --disable-nls --disable-libssp	\
 	--with-dwarf2 --enable-sjlj-exceptions				\
@@ -508,7 +545,7 @@ build-final-gcc stamps/build-final-gcc: stamps/install-binutils stamps/install-g
 	pushd ../../gcc-$(GCC_VERSION) ; \
 	make clean ; \
 	popd ; \
-	../../gcc-$(GCC_VERSION)/configure --prefix=$(PREFIX) \
+	CFLAGS=$(CFLAGS) ../../gcc-$(GCC_VERSION)/configure --prefix=$(PREFIX) \
 	--target=$(TARGET) $(DEPENDENCIES) --enable-languages="c,c++" --with-gnu-ld \
 	--with-gnu-as --with-newlib --disable-nls --disable-libssp \
 	--with-dwarf2 --enable-sjlj-exceptions \
@@ -581,4 +618,4 @@ mpfr: gmp mpfr-$(CS_BASE)/ sudomode
 
 .PHONY : clean
 clean:
-	rm -rf build *-$(CS_BASE) binutils-* gcc-* newlib-* mpc-* $(LOCAL_BASE) dfu-programmer-* autoconf-* automake-* stamps source supp avr32-patches atmel-headers-*
+	rm -rf build *-$(CS_BASE) binutils-* gcc-* newlib-* texinfo-* mpc-* $(LOCAL_BASE) dfu-programmer-* autoconf-* automake-* stamps source supp avr32-patches atmel-headers-*
