@@ -64,11 +64,11 @@ PKG_VERSION = "AVR 32 bit GNU Toolchain-$(AVR_PATCH_REV)-$(GIT_REV)"
 #### PRIMARY TOOLCHAIN URLS #####
 
 GCC_ARCHIVE = gcc-$(GCC_VERSION).tar.bz2
-GCC_URL = http://mirror.anl.gov/pub/gnu/gcc/gcc-$(GCC_VERSION)/$(GCC_ARCHIVE)
+GCC_URL = https://ftpmirror.gnu.org/gcc/gcc-$(GCC_VERSION)/$(GCC_ARCHIVE)
 GCC_MD5 = 295709feb4441b04e87dea3f1bab4281
 
 BINUTILS_ARCHIVE = binutils-$(BINUTILS_VERSION).tar.bz2
-BINUTILS_URL = http://mirror.anl.gov/pub/gnu/binutils/$(BINUTILS_ARCHIVE)
+BINUTILS_URL = https://ftpmirror.gnu.org/binutils/$(BINUTILS_ARCHIVE)
 BINUTILS_MD5 = 33adb18c3048d057ac58d07a3f1adb38
 
 NEWLIB_ARCHIVE = newlib-$(NEWLIB_VERSION).tar.gz
@@ -76,7 +76,7 @@ NEWLIB_URL = ftp://sources.redhat.com/pub/newlib/$(NEWLIB_ARCHIVE)
 NEWLIB_MD5 = bf8f1f9e3ca83d732c00a79a6ef29bc4
 
 AVR32PATCHES_ARCHIVE = avr32-patches.tar.gz
-AVR32PATCHES_URL = http://distribute.atmel.no/tools/opensource/Atmel-AVR-Toolchain-$(AVR32_PATCH_REV)/avr32/$(AVR32PATCHES_ARCHIVE)
+AVR32PATCHES_URL = http://distribute.atmel.no/tools/opensource/Atmel-AVR32-GNU-Toolchain/$(AVR32_PATCH_REV)/$(AVR32PATCHES_ARCHIVE)
 AVR32PATCHES_MD5 = 99b2f4497d264c9200538bb1229fdef9
 
 AVR32HEADERS_ARCHIVE = atmel-headers-$(ATMEL_HEADER_REV).zip
@@ -94,11 +94,11 @@ AUTOMAKE_VERSION = 1.11
 MPC_VERSION = 0.8.1
 
 AUTOCONF_ARCHIVE = autoconf-$(AUTOCONF_VERSION).tar.bz2
-AUTOCONF_URL = http://mirror.anl.gov/pub/gnu/autoconf/$(AUTOCONF_ARCHIVE)
+AUTOCONF_URL = https://ftpmirror.gnu.org/autoconf/$(AUTOCONF_ARCHIVE)
 AUTOCONF_MD5 = ef400d672005e0be21e0d20648169074
 
 AUTOMAKE_ARCHIVE = automake-$(AUTOMAKE_VERSION).tar.bz2
-AUTOMAKE_URL = http://mirror.anl.gov/pub/gnu/automake/$(AUTOMAKE_ARCHIVE)
+AUTOMAKE_URL = https://ftpmirror.gnu.org/automake/$(AUTOMAKE_ARCHIVE)
 AUTOMAKE_MD5 = 4db4efe027e26b33930a7e151de19d0f
 
 
