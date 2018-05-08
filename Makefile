@@ -495,13 +495,15 @@ CFLAGS_FOR_TARGET="-ffunction-sections -fdata-sections			\
 -fomit-frame-pointer -DPREFER_SIZE_OVER_SPEED -D__OPTIMIZE_SIZE__ -g	\
 -Os -fno-unroll-loops"
 
+CFLAGS="-O2 -g -fgnu89-inline"
+
 .PHONY: build-gcc
 build-gcc stamps/build-gcc: stamps/install-binutils stamps/prep-gcc
 	mkdir -p build/gcc && cd build/gcc && \
 	pushd ../../gcc-$(GCC_VERSION) ; \
 	make clean ; \
 	popd ; \
-	../../gcc-$(GCC_VERSION)/configure --prefix="$(PREFIX)"		\
+	CFLAGS=$(CFLAGS) ../../gcc-$(GCC_VERSION)/configure --prefix="$(PREFIX)"		\
 	--target=$(TARGET) --enable-languages="c" --with-gnu-ld		\
 	--with-gnu-as --with-newlib --disable-nls --disable-libssp	\
 	--with-dwarf2 --enable-sjlj-exceptions				\
@@ -543,7 +545,7 @@ build-final-gcc stamps/build-final-gcc: stamps/install-binutils stamps/install-g
 	pushd ../../gcc-$(GCC_VERSION) ; \
 	make clean ; \
 	popd ; \
-	../../gcc-$(GCC_VERSION)/configure --prefix=$(PREFIX) \
+	CFLAGS=$(CFLAGS) ../../gcc-$(GCC_VERSION)/configure --prefix=$(PREFIX) \
 	--target=$(TARGET) $(DEPENDENCIES) --enable-languages="c,c++" --with-gnu-ld \
 	--with-gnu-as --with-newlib --disable-nls --disable-libssp \
 	--with-dwarf2 --enable-sjlj-exceptions \
